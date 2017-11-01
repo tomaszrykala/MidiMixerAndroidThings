@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">MidiMixerAndroidThings</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="device_name">%1$s: %2$s</string>
+    <string name="devices">Devices</string>
+</resources>
