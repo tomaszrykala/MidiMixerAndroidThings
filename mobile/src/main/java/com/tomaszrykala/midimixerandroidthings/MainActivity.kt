@@ -8,6 +8,7 @@ import android.view.Menu
 import android.view.View
 import android.widget.AdapterView
 import android.widget.Spinner
+import android.widget.ToggleButton
 import com.tomaszrykala.midimixerandroidthings.midi.MidiController
 import com.tomaszrykala.midimixerandroidthings.ui.DeviceAdapter
 import com.tomaszrykala.midimixerandroidthings.ui.MidiMixer
@@ -17,7 +18,7 @@ class MainActivity : AppCompatActivity() {
     private val lifecycleRegistry: LifecycleRegistry by lazyFast { LifecycleRegistry(this) }
     override fun getLifecycle(): LifecycleRegistry = lifecycleRegistry
 
-    private val midiController: MidiController by viewModelProvider {
+    val midiController: MidiController by viewModelProvider {
         MidiController(application)
     }
 
@@ -30,15 +31,28 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         setSupportActionBar(toolbar)
-        supportActionBar?.apply {
-            // setTitle(R.string.app_name) // TODO ?
-        }
+
+        initLockTaskOrToolbarTitle(false)
 
         midiController.observeDevices(this, deviceAdapter)
 
         supportFragmentManager.beginTransaction()?.also {
             it.replace(R.id.content_main, Fragment.instantiate(this, MidiMixer::class.java.canonicalName))
             it.commit()
+        }
+    }
+
+    private fun initLockTaskOrToolbarTitle(initLockTaskButton: Boolean) {
+        supportActionBar?.apply {
+            if (!initLockTaskButton) {
+                setTitle(R.string.app_name)
+            }
+        }
+        findViewById<ToggleButton>(R.id.lock_task_button)?.apply {
+            setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) startLockTask() else stopLockTask()
+            }
+            visibility = if (initLockTaskButton) View.VISIBLE else View.GONE
         }
     }
 
