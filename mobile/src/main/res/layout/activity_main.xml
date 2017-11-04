@@ -44,8 +44,8 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include
-        android:id="@+id/content_main"
-        layout="@layout/content_main"/>
+    <!--<include-->
+        <!--android:id="@+id/content_main"-->
+        <!--layout="@layout/content_main"/>-->
 
 </android.support.design.widget.CoordinatorLayout>
