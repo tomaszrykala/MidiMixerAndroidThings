@@ -21,54 +21,62 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     companion object {
-        val TAG = MainActivity.javaClass.simpleName
+        val TAG = MainActivity::class.java.simpleName
     }
 
     override fun onConnected(p0: Bundle?) {
+        startAdvertising()
+    }
 
+    fun startAdvertising() {
         Nearby.Connections.startAdvertising(
                 googleApiClient,
                 serviceId,
                 serviceId,
                 midiConnectionCallback,
-                AdvertisingOptions(Strategy.P2P_CLUSTER))
-                .setResultCallback { result ->
-                    if (result.status.isSuccess) {
-                        Log.d(TAG, "startAdvertising:onResult: SUCCESS")
-                    } else {
-                        Log.d(TAG, "startAdvertising:onResult: FAILURE ")
-                        val statusCode = result.status.statusCode
-                        if (statusCode == ConnectionsStatusCodes.STATUS_ALREADY_ADVERTISING) {
-                            Log.d(TAG, "STATUS_ALREADY_ADVERTISING")
-                        } else {
-                            Log.d(TAG, "STATE_READY")
-                        }
-                    }
+                AdvertisingOptions(Strategy.P2P_CLUSTER)
+        ).setResultCallback { result ->
+            if (result.status.isSuccess) {
+                Log.d(TAG, "startAdvertising:onResult: SUCCESS")
+            } else {
+                Log.d(TAG, "startAdvertising:onResult: FAILURE ")
+                val statusCode = result.status.statusCode
+                if (statusCode == ConnectionsStatusCodes.STATUS_ALREADY_ADVERTISING) {
+                    Log.d(TAG, "STATUS_ALREADY_ADVERTISING")
+                } else {
+                    Log.d(TAG, "STATE_READY")
                 }
+            }
+        }
     }
 
 
     override fun onConnectionSuspended(p0: Int) {
-
+        Log.d(TAG, "onConnectionSuspended")
     }
 
     override fun onConnectionFailed(p0: ConnectionResult) {
-
+        Log.d(TAG, "onConnectionFailed")
     }
 
     private val lifecycleRegistry: LifecycleRegistry by lazyFast { LifecycleRegistry(this) }
     override fun getLifecycle(): LifecycleRegistry = lifecycleRegistry
 
     private lateinit var serviceId: String
-    private lateinit var midiConnectionCallback: MidiConnectionCallback
     private lateinit var midiPayloadCallback: MidiPayloadCallback
+    private lateinit var midiConnectionCallback: MidiConnectionCallback
 
-    class MidiConnectionCallback(val googleApiClient: GoogleApiClient,
-                                 val midiPayloadCallback: MidiPayloadCallback) : ConnectionLifecycleCallback() {
+    class MidiConnectionCallback(private val googleApiClient: GoogleApiClient,
+                                 private val midiPayloadCallback: MidiPayloadCallback,
+                                 private val mainActivity: MainActivity) : ConnectionLifecycleCallback() {
 
-        override fun onConnectionResult(endpointId: String?, p1: ConnectionResolution?) {
-            when (p1?.status?.statusCode) {
-                ConnectionsStatusCodes.STATUS_OK -> Log.d(TAG, "onConnectionResult OK")
+        override fun onConnectionResult(endpointId: String?, connectionResolution: ConnectionResolution?) {
+            Log.d(TAG, connectionResolution.toString())
+            when (connectionResolution?.status?.statusCode) {
+                ConnectionsStatusCodes.SUCCESS -> {
+                    Log.d(TAG, "onConnectionResult OK")
+                    Nearby.Connections.stopAdvertising(googleApiClient)
+                }
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> Log.d(TAG, "onConnectionResult REJECTED")
                 else -> Log.d(TAG, "onConnectionResult not OK")
             }
@@ -76,6 +84,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
 
         override fun onDisconnected(endpointId: String?) {
             Log.d(TAG, "onDisconnected")
+            mainActivity.startAdvertising()
         }
 
         override fun onConnectionInitiated(endpointId: String?, p1: ConnectionInfo?) {
@@ -125,9 +134,9 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
 
         midiController.observeDevices(this, deviceAdapter)
 
-        serviceId = getString(R.string.service_id)
+        serviceId = getString(R.string.service_id) + "_APP"
         midiPayloadCallback = MidiPayloadCallback(midiController)
-        midiConnectionCallback = MidiConnectionCallback(googleApiClient, midiPayloadCallback)
+        midiConnectionCallback = MidiConnectionCallback(googleApiClient, midiPayloadCallback, this)
     }
 
     private fun initLockTaskOrToolbarTitle(initLockTaskButton: Boolean) {

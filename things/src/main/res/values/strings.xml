@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MidiMixerAndroidThings</string>
+    <string name="service_id">@string/app_name</string>
 </resources>
