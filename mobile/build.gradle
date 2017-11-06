@@ -34,4 +34,5 @@ dependencies {
     implementation 'android.arch.lifecycle:runtime:1.0.0'
     implementation 'android.arch.lifecycle:extensions:1.0.0-alpha9-1'
     kapt 'android.arch.lifecycle:compiler:1.0.0-alpha9-1'
+    implementation 'com.google.android.gms:play-services-nearby:11.0.4' // TODO 11.0.4 vs 11.4.2
 }

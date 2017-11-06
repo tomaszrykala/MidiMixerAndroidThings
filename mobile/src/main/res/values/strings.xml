@@ -4,4 +4,7 @@
 
     <string name="device_name">%1$s: %2$s</string>
     <string name="devices">Devices</string>
+    <string name="pin_unpinned">pin app</string>
+    <string name="pin_pinned">pinned</string>
+    <string name="service_id">@string/app_name</string>
 </resources>
