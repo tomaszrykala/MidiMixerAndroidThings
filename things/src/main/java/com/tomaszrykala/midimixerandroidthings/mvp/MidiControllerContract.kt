@@ -15,7 +15,7 @@ interface MidiControllerContract {
 
         fun startDiscovery()
 
-        fun requestConnectionWithEndpoint(endpointId: String)
+        fun requestConnection(endpointId: String)
 
         fun acceptConnection(endpointId: String?)
 

@@ -36,7 +36,7 @@ class MidiControllerPresenter(val view: MidiControllerContract.View) : MidiContr
 
     override fun onEndpointFound(id: String?, discoveredEndpointInfo: DiscoveredEndpointInfo?) {
         if (id != null && id != endpointId) {
-            view.requestConnectionWithEndpoint(id)
+            view.requestConnection(id)
             endpointId = id
         } else {
             // TODO something bad

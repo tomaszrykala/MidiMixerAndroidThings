@@ -11,27 +11,6 @@ import com.google.android.things.contrib.driver.button.Button
 import com.google.android.things.contrib.driver.rainbowhat.RainbowHat
 import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 
-
-/**
- * Skeleton of an Android Things activity.
- *
- * Android Things peripheral APIs are accessible through the class
- * PeripheralManagerService. For example, the snippet below will open a GPIO pin and
- * set it to HIGH:
- *
- * <pre>{@code
- * val service = PeripheralManagerService()
- * val mLedGpio = service.openGpio("BCM6")
- * mLedGpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW)
- * mLedGpio.value = true
- * }</pre>
- * <p>
- * For more complex peripherals, look for an existing user-space driver, or implement one if none
- * is available.
- *
- * @see <a href="https://github.com/androidthings/contrib-drivers#readme">https://github.com/androidthings/contrib-drivers#readme</a>
- *
- */
 class MainActivity : Activity(), MidiControllerContract.View,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
@@ -50,10 +29,16 @@ class MainActivity : Activity(), MidiControllerContract.View,
         }
     }
 
-    override fun requestConnectionWithEndpoint(endpointId: String) {
+    override fun requestConnection(endpointId: String) {
         this.endpointId = endpointId
-        requestConnection(endpointId)
-//        Nearby.Connections.stopDiscovery(googleApiClient)
+        Nearby.Connections.requestConnection(
+                googleApiClient,
+                serviceId,
+                endpointId,
+                midiConnectionCallback
+        ).setResultCallback { result ->
+            midiPresenter.onResultCallback(result)
+        }
     }
 
     override fun sendPayload() {
@@ -81,18 +66,7 @@ class MainActivity : Activity(), MidiControllerContract.View,
                 googleApiClient,
                 serviceId,
                 midiEndpointDiscoveryCallback,
-                DiscoveryOptions(Strategy.P2P_CLUSTER)
-        ).setResultCallback { result ->
-            midiPresenter.onResultCallback(result)
-        }
-    }
-
-    fun requestConnection(endpointId: String) {
-        Nearby.Connections.requestConnection(
-                googleApiClient,
-                serviceId,
-                endpointId,
-                midiConnectionCallback
+                DiscoveryOptions(Strategy.P2P_STAR)
         ).setResultCallback { result ->
             midiPresenter.onResultCallback(result)
         }
@@ -101,7 +75,7 @@ class MainActivity : Activity(), MidiControllerContract.View,
     class MidiEndpointDiscoveryCallback(private val mainActivity: MainActivity,
                                         private val midiPresenter: MidiControllerContract.Presenter) : EndpointDiscoveryCallback() {
         override fun onEndpointFound(endpointId: String?, discoveredEndpointInfo: DiscoveredEndpointInfo?) {
-            midiPresenter.onEndpointFound(endpointId, discoveredEndpointInfo);
+            midiPresenter.onEndpointFound(endpointId, discoveredEndpointInfo)
         }
 
         override fun onEndpointLost(endpointId: String?) {
@@ -143,12 +117,13 @@ class MainActivity : Activity(), MidiControllerContract.View,
         buttonA = RainbowHat.openButtonA().apply {
             setOnButtonEventListener { _, pressed ->
                 Log.d(TAG, "button A pressed:" + pressed)
-
-                Nearby.Connections.sendPayload(
-                        googleApiClient,
-                        endpointId,
-                        Payload.fromBytes(byteArrayOf(0, 0, 64))
-                )
+                if (pressed) {
+                    Nearby.Connections.sendPayload(
+                            googleApiClient,
+                            endpointId,
+                            Payload.fromBytes(byteArrayOf(0, 0, 64))
+                    )
+                }
             }
         }
 

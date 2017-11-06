@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
                 serviceId,
                 serviceId,
                 midiConnectionCallback,
-                AdvertisingOptions(Strategy.P2P_CLUSTER)
+                AdvertisingOptions(Strategy.P2P_STAR)
         ).setResultCallback { result ->
 
             val statusCode = result.status.statusCode
