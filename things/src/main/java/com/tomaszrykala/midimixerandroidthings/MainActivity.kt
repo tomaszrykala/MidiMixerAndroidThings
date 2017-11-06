@@ -7,7 +7,9 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
+import com.google.android.things.contrib.driver.button.Button
 import com.google.android.things.contrib.driver.rainbowhat.RainbowHat
+import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 
 
 /**
@@ -30,29 +32,58 @@ import com.google.android.things.contrib.driver.rainbowhat.RainbowHat
  * @see <a href="https://github.com/androidthings/contrib-drivers#readme">https://github.com/androidthings/contrib-drivers#readme</a>
  *
  */
-class MainActivity : Activity(), GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+class MainActivity : Activity(), MidiControllerContract.View,
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+
+    override fun acceptConnection(endpointId: String?) {
+
+        Nearby.Connections.acceptConnection(googleApiClient, endpointId, midiPayloadCallback)
+    }
+
+    override fun connect() {
+        googleApiClient.connect()
+    }
+
+    override fun disconnect() {
+        if (googleApiClient.isConnected) {
+            googleApiClient.disconnect()
+        }
+    }
+
+    override fun requestConnectionWithEndpoint(endpointId: String) {
+        this.endpointId = endpointId
+        requestConnection(endpointId)
+//        Nearby.Connections.stopDiscovery(googleApiClient)
+    }
+
+    override fun sendPayload() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     private lateinit var serviceId: String
     private lateinit var midiEndpointDiscoveryCallback: MidiEndpointDiscoveryCallback
     private lateinit var midiConnectionCallback: MidiConnectionCallback
     private lateinit var midiPayloadCallback: MidiPayloadCallback
 
+    private lateinit var buttonA: Button
+    private lateinit var buttonB: Button
+
+    private var endpointId: String? = null
+
+    private lateinit var midiPresenter: MidiControllerContract.Presenter
+
     override fun onConnected(p0: Bundle?) {
-        startDiscovery()
+        midiPresenter.onConnected()
     }
 
-    fun startDiscovery() {
+    override fun startDiscovery() {
         Nearby.Connections.startDiscovery(
                 googleApiClient,
                 serviceId,
                 midiEndpointDiscoveryCallback,
                 DiscoveryOptions(Strategy.P2P_CLUSTER)
         ).setResultCallback { result ->
-            if (result.isSuccess) {
-                Log.d(TAG, "startDiscovery:onResult: SUCCESS")
-            } else {
-                Log.d(TAG, "startDiscovery:onResult: FAILURE")
-            }
+            midiPresenter.onResultCallback(result)
         }
     }
 
@@ -63,42 +94,14 @@ class MainActivity : Activity(), GoogleApiClient.ConnectionCallbacks, GoogleApiC
                 endpointId,
                 midiConnectionCallback
         ).setResultCallback { result ->
-            if (result.status.isSuccess) {
-                Log.d(TAG, "requestConnection:onResult: SUCCESS")
-
-                // Detect when button 'A' is pressed.
-                val button = RainbowHat.openButtonA()
-                button.setOnButtonEventListener { _, pressed ->
-                    Log.d(TAG, "button A pressed:" + pressed)
-
-                    Nearby.Connections.sendPayload(
-                            googleApiClient,
-                            endpointId,
-                            Payload.fromBytes(byteArrayOf(0, 0, 64))
-                    )
-                }
-
-                // Close the device when done.
-                button.close()
-
-
-            } else {
-                Log.d(TAG, "requestConnection:onResult: FAILURE ")
-                val statusCode = result.status.statusCode
-                if (statusCode == ConnectionsStatusCodes.STATUS_ALREADY_CONNECTED_TO_ENDPOINT) {
-                    Log.d(TAG, "STATUS_ALREADY_CONNECTED_TO_ENDPOINT")
-                } else {
-                    Log.d(TAG, "STATE_READY")
-                }
-            }
+            midiPresenter.onResultCallback(result)
         }
     }
 
-    class MidiEndpointDiscoveryCallback(private val googleApiClient: GoogleApiClient,
-                                        private val mainActivity: MainActivity) : EndpointDiscoveryCallback() {
+    class MidiEndpointDiscoveryCallback(private val mainActivity: MainActivity,
+                                        private val midiPresenter: MidiControllerContract.Presenter) : EndpointDiscoveryCallback() {
         override fun onEndpointFound(endpointId: String?, discoveredEndpointInfo: DiscoveredEndpointInfo?) {
-            Nearby.Connections.stopDiscovery(googleApiClient)
-            if (endpointId != null) mainActivity.requestConnection(endpointId)
+            midiPresenter.onEndpointFound(endpointId, discoveredEndpointInfo);
         }
 
         override fun onEndpointLost(endpointId: String?) {
@@ -115,7 +118,7 @@ class MainActivity : Activity(), GoogleApiClient.ConnectionCallbacks, GoogleApiC
     }
 
     companion object {
-        val TAG = MainActivity::class.java.simpleName
+        val TAG = MainActivity::class.java.simpleName + "_THINGS"
     }
 
     private val googleApiClient: GoogleApiClient by lazyFast {
@@ -130,47 +133,54 @@ class MainActivity : Activity(), GoogleApiClient.ConnectionCallbacks, GoogleApiC
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        serviceId = getString(R.string.service_id) + "_THINGS"
+        midiPresenter = MidiControllerPresenter(this)
+
+        serviceId = getString(R.string.service_id) + "_APP" // THINGS
         midiPayloadCallback = MidiPayloadCallback()
-        midiConnectionCallback = MidiConnectionCallback(googleApiClient, midiPayloadCallback, this)
-        midiEndpointDiscoveryCallback = MidiEndpointDiscoveryCallback(googleApiClient, this)
+        midiConnectionCallback = MidiConnectionCallback(midiPresenter)
+        midiEndpointDiscoveryCallback = MidiEndpointDiscoveryCallback(this, midiPresenter)
+
+        buttonA = RainbowHat.openButtonA().apply {
+            setOnButtonEventListener { _, pressed ->
+                Log.d(TAG, "button A pressed:" + pressed)
+
+                Nearby.Connections.sendPayload(
+                        googleApiClient,
+                        endpointId,
+                        Payload.fromBytes(byteArrayOf(0, 0, 64))
+                )
+            }
+        }
+
+        buttonB = RainbowHat.openButtonB().apply {
+            setOnButtonEventListener { _, pressed ->
+                startDiscovery()
+            }
+        }
     }
 
     override fun onStart() {
         super.onStart()
-        googleApiClient.connect()
+        midiPresenter.onStart()
     }
 
     override fun onStop() {
         super.onStop()
-        if (googleApiClient.isConnected) {
-            googleApiClient.disconnect()
-        }
+        midiPresenter.onStop()
     }
 
-    class MidiConnectionCallback(private val googleApiClient: GoogleApiClient,
-                                 private val midiPayloadCallback: MidiPayloadCallback,
-                                 private val mainActivity: MainActivity) : ConnectionLifecycleCallback() {
+    class MidiConnectionCallback(private val midiPresenter: MidiControllerContract.Presenter) : ConnectionLifecycleCallback() {
 
         override fun onConnectionResult(endpointId: String?, p1: ConnectionResolution?) {
-            when (p1?.status?.statusCode) {
-                ConnectionsStatusCodes.STATUS_OK -> {
-                    Log.d(TAG, "onConnectionResult OK")
-                    Nearby.Connections.stopDiscovery(googleApiClient)
-                }
-                ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> Log.d(TAG, "onConnectionResult REJECTED")
-                else -> Log.d(TAG, "onConnectionResult not OK")
-            }
+            midiPresenter.onConnectionResult(endpointId, p1)
         }
 
         override fun onDisconnected(endpointId: String?) {
-            Log.d(TAG, "onDisconnected")
-            mainActivity.startDiscovery()
+            midiPresenter.onDisconnected(endpointId)
         }
 
-        override fun onConnectionInitiated(endpointId: String?, p1: ConnectionInfo?) {
-            Log.d(TAG, "onConnectionInitiated")
-            Nearby.Connections.acceptConnection(googleApiClient, endpointId, midiPayloadCallback)
+        override fun onConnectionInitiated(endpointId: String?, connectionInfo: ConnectionInfo?) {
+            midiPresenter.onConnectionInitiated(endpointId, connectionInfo)
         }
     }
 

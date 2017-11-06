@@ -1,7 +1,9 @@
 package com.tomaszrykala.midimixerandroidthings
 
+import android.Manifest
 import android.arch.lifecycle.LifecycleRegistry
 import android.os.Bundle
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
@@ -21,7 +23,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     companion object {
-        val TAG = MainActivity::class.java.simpleName
+        val TAG = MainActivity::class.java.simpleName + "_APP"
     }
 
     override fun onConnected(p0: Bundle?) {
@@ -36,16 +38,23 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
                 midiConnectionCallback,
                 AdvertisingOptions(Strategy.P2P_CLUSTER)
         ).setResultCallback { result ->
+
+            val statusCode = result.status.statusCode
+            Log.d(TAG, statusCode.toString())
+            val permissionCheck = ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION)
+            Log.d(TAG, " Manifest.permission.ACCESS_COARSE_LOCATION: " + permissionCheck)
+
             if (result.status.isSuccess) {
                 Log.d(TAG, "startAdvertising:onResult: SUCCESS")
             } else {
                 Log.d(TAG, "startAdvertising:onResult: FAILURE ")
-                val statusCode = result.status.statusCode
-                if (statusCode == ConnectionsStatusCodes.STATUS_ALREADY_ADVERTISING) {
-                    Log.d(TAG, "STATUS_ALREADY_ADVERTISING")
-                } else {
-                    Log.d(TAG, "STATE_READY")
-                }
+
+//                if (statusCode == ConnectionsStatusCodes.STATUS_ALREADY_ADVERTISING) {
+//                    Log.d(TAG, "STATUS_ALREADY_ADVERTISING")
+//                } else {
+//                    Log.d(TAG, "STATE_READY")
+//                }
             }
         }
     }
@@ -96,10 +105,16 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
     class MidiPayloadCallback(private val midiController: MidiController) : PayloadCallback() {
 
         override fun onPayloadReceived(endpointId: String?, payload: Payload?) {
+            Log.d(TAG, "endpointId = ${endpointId}" + "payload = ${payload}")
             val bytes = payload?.asBytes()
             if (bytes is ByteArray) {
                 // TODO change method arguments to bytes
-                midiController.noteOn(bytes[0].toInt(), bytes[1].toInt(), bytes[2].toFloat())
+                val channel = bytes[0].toInt()
+                val note = bytes[1].toInt()
+                val pressure = bytes[2].toFloat()
+                midiController.noteOn(channel, note, pressure)
+
+                Log.d(TAG, "channel = ${channel}" + "note = ${note}" + "pressure = ${pressure}")
             }
         }
 
