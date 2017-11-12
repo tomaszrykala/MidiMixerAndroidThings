@@ -13,6 +13,8 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
+import com.tomaszrykala.common.MidiEventType
+import com.tomaszrykala.common.MidiEventWrapper
 import com.tomaszrykala.midimixerandroidthings.midi.MidiController
 import com.tomaszrykala.midimixerandroidthings.ui.DeviceAdapter
 import kotlinx.android.synthetic.main.activity_main.*
@@ -47,12 +49,11 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
                 log("startAdvertising:onResult: SUCCESS")
             } else {
                 log("startAdvertising:onResult: FAILURE ")
-
-//                if (statusCode == ConnectionsStatusCodes.STATUS_ALREADY_ADVERTISING) {
-//                    log( "STATUS_ALREADY_ADVERTISING")
-//                } else {
-//                    log( "STATE_READY")
-//                }
+                if (statusCode == ConnectionsStatusCodes.STATUS_ALREADY_ADVERTISING) {
+                    log("STATUS_ALREADY_ADVERTISING")
+                } else {
+                    log("STATE_READY")
+                }
             }
         }
     }
@@ -103,15 +104,17 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
     class MidiPayloadCallback(private val midiController: MidiController, private val mainActivity: MainActivity) : PayloadCallback() {
 
         override fun onPayloadReceived(endpointId: String?, payload: Payload?) {
-            mainActivity.log("endpointId = ${endpointId}" + "payload = ${payload}")
+            mainActivity.log("endpointId = $endpointId" + "payload = $payload")
             val bytes = payload?.asBytes()
-            if (bytes is ByteArray) {
-                // TODO change method arguments to bytes
-                val channel = bytes[0].toInt()
-                val note = bytes[1].toInt()
-                val pressure = bytes[2].toFloat()
-                midiController.noteOn(channel, note, pressure)
-                mainActivity.log("channel = ${channel}" + "note = ${note}" + "pressure = ${pressure}")
+            if (bytes is ByteArray && bytes.size == 4) {
+                val wrapper = MidiEventWrapper(bytes.copyOfRange(0, 2))
+                when (bytes[3]) {
+                    MidiEventType.STATUS_NOTE_ON.byte -> midiController.noteOn(wrapper.channel(), wrapper.note(), wrapper.pressure())
+                    MidiEventType.STATUS_NOTE_OFF.byte -> midiController.noteOff(wrapper.channel(), wrapper.note(), wrapper.pressure())
+                    MidiEventType.STATUS_CONTROL_CHANGE.byte -> midiController.controlChange(wrapper.channel(), wrapper.note(), wrapper.pressure())
+                    else -> throw IllegalArgumentException("Unsupported payload type")
+                }
+                mainActivity.log("channel = ${wrapper.channel()}" + "note = ${wrapper.note()}" + "pressure = " + "${wrapper.pressure()}")
             }
         }
 
