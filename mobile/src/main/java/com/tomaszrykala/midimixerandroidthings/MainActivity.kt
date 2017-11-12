@@ -149,7 +149,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
 
         midiController.observeDevices(this, deviceAdapter)
 
-        serviceId = getString(R.string.service_id) + "_APP"
+        serviceId = getString(R.string.service_id)
         midiPayloadCallback = MidiPayloadCallback(midiController)
         midiConnectionCallback = MidiConnectionCallback(googleApiClient, midiPayloadCallback, this)
     }
