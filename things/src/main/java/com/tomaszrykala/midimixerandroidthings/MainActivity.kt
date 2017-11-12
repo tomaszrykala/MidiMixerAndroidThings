@@ -14,6 +14,7 @@ import com.tomaszrykala.midimixerandroidthings.callback.MidiConnectionCallback
 import com.tomaszrykala.midimixerandroidthings.callback.MidiEndpointDiscoveryCallback
 import com.tomaszrykala.midimixerandroidthings.callback.MidiPayloadCallback
 import com.tomaszrykala.midimixerandroidthings.control.MidiControls
+import com.tomaszrykala.midimixerandroidthings.control.Spi
 import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 
 class MainActivity : Activity(),
@@ -54,12 +55,16 @@ class MainActivity : Activity(),
                 .build()
     }
 
+    private val spi = Spi()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         midiPresenter = MidiControllerPresenter(this, getString(R.string.service_id))
         midiConnectionCallback = MidiConnectionCallback(midiPresenter)
+
+        spi.connect() // TODO SPI
     }
 
     override fun onStart() {
@@ -76,6 +81,7 @@ class MainActivity : Activity(),
     override fun onDestroy() {
         super.onDestroy()
         midiControls.onClose()
+        spi.close() // TODO SPI
     }
 
     override fun startDiscovery(serviceId: String) {
