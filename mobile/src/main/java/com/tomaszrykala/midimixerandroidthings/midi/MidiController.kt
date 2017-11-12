@@ -36,7 +36,7 @@ class MidiController(
                 }
             }
 
-    fun close() {
+    private fun close() {
         midiInputPort?.close()
         midiInputPort = null
         midiDevice?.close()
