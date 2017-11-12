@@ -32,6 +32,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 
     compileOnly 'com.google.android.things:androidthings:0.5.1-devpreview'
-    implementation 'com.google.android.things.contrib:driver-rainbowhat:0.5'
+//    implementation 'com.google.android.things.contrib:driver-rainbowhat:0.5'
+    compile 'com.google.android.things.contrib:driver-button:0.4'
     implementation 'com.google.android.gms:play-services-nearby:11.0.4' // TODO 11.0.4 vs 11.4.2
 }

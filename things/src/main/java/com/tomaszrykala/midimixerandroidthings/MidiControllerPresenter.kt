@@ -6,7 +6,7 @@ import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
-import com.tomaszrykala.midimixerandroidthings.control.MidiButton
+import com.tomaszrykala.midimixerandroidthings.control.MixerButton
 import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 
 class MidiControllerPresenter(private val view: MidiControllerContract.View,
@@ -87,11 +87,11 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
 
     }
 
-    override fun onPressed(button: MidiButton) {
+    override fun onPressed(button: MixerButton, pressed: Boolean) {
         if (endpoint != null) {
             Log.d(MainActivity.TAG, "button A pressed:" + button)
-            if (button.pressed) {
-                view.sendPayload(endpoint!!, button.channel, button.note)
+            if (pressed) {
+                view.sendPayload(endpoint!!, button.channel, 64)
             }
         } else {
             // TODO ?

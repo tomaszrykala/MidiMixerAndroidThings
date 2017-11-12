@@ -4,7 +4,7 @@ import com.google.android.gms.common.api.Status
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
-import com.tomaszrykala.midimixerandroidthings.control.MidiButton
+import com.tomaszrykala.midimixerandroidthings.control.MixerButton
 
 interface MidiControllerContract {
 
@@ -45,6 +45,6 @@ interface MidiControllerContract {
 
         fun onConnected()
 
-        fun onPressed(button: MidiButton)
+        fun onPressed(button: MixerButton, pressed: Boolean)
     }
 }
