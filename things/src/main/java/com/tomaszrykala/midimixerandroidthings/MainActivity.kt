@@ -23,27 +23,17 @@ class MainActivity : Activity(),
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         println("MainActivity.onKeyDown")
-
         midiControls.mixerButtons
                 .filter { keyCode == it.key }
                 .forEach { midiPresenter.onPressed(it, true) }
-
-//        if (keyCode == KeyEvent.KEYCODE_SPACE) {
-//            midiPresenter.onPressed(MidiButton(0, true))
-//        }
         return super.onKeyDown(keyCode, event)
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
         println("MainActivity.onKeyUp")
-
         midiControls.mixerButtons
                 .filter { keyCode == it.key }
                 .forEach { midiPresenter.onPressed(it, false) }
-
-//        if (keyCode == KeyEvent.KEYCODE_SPACE) {
-//            midiPresenter.onPressed(MidiButton(0, false))
-//        }
         return super.onKeyUp(keyCode, event)
     }
 
