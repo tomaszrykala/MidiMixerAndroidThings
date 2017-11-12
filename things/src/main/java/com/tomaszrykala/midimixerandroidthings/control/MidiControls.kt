@@ -7,10 +7,6 @@ import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 
 class MidiControls {
 
-    private lateinit var buttonA: Button
-    private lateinit var buttonB: Button
-    private lateinit var buttonC: Button
-
     private lateinit var buttonInputDriverOne: ButtonInputDriver
     private lateinit var buttonInputDriverTwo: ButtonInputDriver
 
@@ -35,10 +31,5 @@ class MidiControls {
         buttonInputDriverTwo.unregister()
         buttonInputDriverOne.close()
         buttonInputDriverTwo.close()
-
-        buttonA.close()
-        buttonB.close()
-        buttonC.close()
-
     }
 }

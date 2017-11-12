@@ -13,6 +13,7 @@ import com.google.android.gms.nearby.connection.Strategy
 import com.tomaszrykala.midimixerandroidthings.callback.MidiConnectionCallback
 import com.tomaszrykala.midimixerandroidthings.callback.MidiEndpointDiscoveryCallback
 import com.tomaszrykala.midimixerandroidthings.callback.MidiPayloadCallback
+import com.tomaszrykala.midimixerandroidthings.control.MCP3008
 import com.tomaszrykala.midimixerandroidthings.control.MidiControls
 import com.tomaszrykala.midimixerandroidthings.control.Spi
 import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
@@ -55,7 +56,8 @@ class MainActivity : Activity(),
                 .build()
     }
 
-    private val spi = Spi()
+    // private val spi = Spi()
+    private val mcp = MCP3008.Controller()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,14 +65,16 @@ class MainActivity : Activity(),
 
         midiPresenter = MidiControllerPresenter(this, getString(R.string.service_id))
         midiConnectionCallback = MidiConnectionCallback(midiPresenter)
-
-        spi.connect() // TODO SPI
     }
 
     override fun onStart() {
         super.onStart()
         midiPresenter.onStart()
         midiControls.onStart(midiPresenter)
+
+        // TODO SPI
+        // spi.connect()
+        mcp.start()
     }
 
     override fun onStop() {
@@ -81,7 +85,9 @@ class MainActivity : Activity(),
     override fun onDestroy() {
         super.onDestroy()
         midiControls.onClose()
-        spi.close() // TODO SPI
+
+        // spi.close() // TODO SPI
+        mcp.stop()
     }
 
     override fun startDiscovery(serviceId: String) {
