@@ -21,8 +21,8 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
 
     override fun onResultCallback(result: Status) {
         val s = "onResultCallback:onResult: "
-        Log.d(TAG, s + result.isSuccess)
-        Log.d(TAG, s + result.status.statusCode.toString())
+        Log.i(TAG, s + result.isSuccess)
+        Log.i(TAG, s + result.status.statusCode.toString())
     }
 
     override fun onStart() {
@@ -61,7 +61,7 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
         if (endpointId != null) {
             endpoint = endpointId
             view.acceptConnection(endpointId)
-            Log.d(TAG, "onConnectionInitiated")
+            Log.i(TAG, "onConnectionInitiated")
         }
     }
 
@@ -69,11 +69,11 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
         if (endpoint != endpointId) {
             when (p1?.status?.statusCode) {
                 ConnectionsStatusCodes.STATUS_OK -> {
-                    Log.d(TAG, "onConnectionResult OK")
+                    Log.i(TAG, "onConnectionResult OK")
                     // Nearby.Connections.stopDiscovery(googleApiClient)
                 }
-                ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> Log.d(TAG, "onConnectionResult REJECTED")
-                else -> Log.d(TAG, "onConnectionResult not OK")
+                ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> Log.i(TAG, "onConnectionResult REJECTED")
+                else -> Log.i(TAG, "onConnectionResult not OK")
             }
         } else {
             // TODO ?
@@ -81,7 +81,7 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
     }
 
     override fun onDisconnected(endpointId: String?) {
-        Log.d(TAG, "onDisconnected")
+        Log.i(TAG, "onDisconnected")
         if (endpoint == endpointId) {
             view.startDiscovery(service)
             endpoint = null
@@ -101,7 +101,7 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
 
     override fun onControlChange(change: Int) {
         if (endpoint != null) {
-            view.sendPayload(endpoint!!, MidiEventWrapper(MidiEventType.STATUS_CONTROL_CHANGE, 2, 64, 64))
+            view.sendPayload(endpoint!!, MidiEventWrapper(MidiEventType.STATUS_CONTROL_CHANGE, 2, change.toByte(), 64))
         }
     }
 }

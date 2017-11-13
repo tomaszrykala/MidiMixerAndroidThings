@@ -125,11 +125,12 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
                 Payload.fromBytes(byteArrayOf(wrapper.type(), wrapper.channel(), wrapper.note(), wrapper.pressure())))
     }
 
-    private fun output(append: String) {
+    private fun output(output: String) {
         if (outputTextView != null && scrollView != null) {
-            outputTextView.text = StringBuilder(append).append(outputTextView.text).toString()
+            outputTextView.text = StringBuilder(output).append(outputTextView.text).toString()
             scrollView!!.fullScroll(ScrollView.FOCUS_DOWN)
         }
+        Log.i(TAG, output)
     }
 
     /** GoogleApiClient Callbacks */
@@ -139,15 +140,11 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
     }
 
     override fun onConnectionSuspended(p0: Int) {
-        val output = "onConnectionSuspended"
-        Log.d(TAG, output)
-        output(output)
+        output("onConnectionSuspended")
     }
 
     override fun onConnectionFailed(p0: ConnectionResult) {
-        val output = "onConnectionFailed"
-        Log.d(TAG, output)
-        output(output)
+        output("onConnectionFailed")
     }
 
     /** GoogleApiClient Callbacks */

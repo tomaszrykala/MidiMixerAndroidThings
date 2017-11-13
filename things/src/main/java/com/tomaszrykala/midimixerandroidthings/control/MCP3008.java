@@ -124,7 +124,7 @@ public class MCP3008 {
                     final int readAdc = Math.round(mMCP3008.readAdc(0x0) / 8);
                     if (lastRead != readAdc) {
                         lastRead = readAdc;
-//                        Log.d(TAG, "ADC 0: " + lastRead);
+                        Log.d(TAG, "ADC 0: " + lastRead);
                         listeners.get(0).onChange(lastRead);
                     }
 

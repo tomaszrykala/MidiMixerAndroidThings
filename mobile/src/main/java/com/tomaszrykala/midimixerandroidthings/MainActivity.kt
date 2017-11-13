@@ -1,9 +1,8 @@
 package com.tomaszrykala.midimixerandroidthings
 
-import android.Manifest
 import android.arch.lifecycle.LifecycleRegistry
 import android.os.Bundle
-import android.support.v4.content.ContextCompat
+import android.support.design.widget.FloatingActionButton
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
@@ -26,6 +25,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
     }
 
     override fun onConnected(p0: Bundle?) {
+        progressBar?.visibility = View.VISIBLE
         startAdvertising()
     }
 
@@ -37,18 +37,12 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
                 midiConnectionCallback,
                 AdvertisingOptions(Strategy.P2P_STAR)
         ).setResultCallback { result ->
-
-            val statusCode = result.status.statusCode
-            log(statusCode.toString())
-            val permissionCheck = ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.ACCESS_COARSE_LOCATION)
-            log(" Manifest.permission.ACCESS_COARSE_LOCATION: " + permissionCheck)
-
+            log(result.status.statusCode.toString())
             if (result.status.isSuccess) {
                 log("startAdvertising:onResult: SUCCESS")
             } else {
                 log("startAdvertising:onResult: FAILURE ")
-                if (statusCode == ConnectionsStatusCodes.STATUS_ALREADY_ADVERTISING) {
+                if (result.status.statusCode == ConnectionsStatusCodes.STATUS_ALREADY_ADVERTISING) {
                     log("STATUS_ALREADY_ADVERTISING")
                 } else {
                     log("STATE_READY")
@@ -59,10 +53,12 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
 
 
     override fun onConnectionSuspended(p0: Int) {
+        progressBar?.visibility = View.INVISIBLE
         log("onConnectionSuspended")
     }
 
     override fun onConnectionFailed(p0: ConnectionResult) {
+        progressBar?.visibility = View.INVISIBLE
         log("onConnectionFailed")
     }
 
@@ -100,14 +96,13 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
         }
     }
 
-    class MidiPayloadCallback(private val midiController: MidiController, private val mainActivity: MainActivity) : PayloadCallback() {
+    class MidiPayloadCallback(private val midiController: MidiController) : PayloadCallback() {
 
         override fun onPayloadReceived(endpointId: String?, payload: Payload?) {
             Log.d(TAG, "endpointId = $endpointId" + "payload = $payload")
 
             val data = payload?.asBytes()
             if (data is ByteArray && data.size == 4) {
-                // val wrapper = MidiEventWrapper(data[0], data.copyOfRange(1, 3))
                 val type = data[0]
                 val channel = data[1].toInt()
                 val note = data[2].toInt()
@@ -155,6 +150,9 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
 
     private var textView: TextView? = null
     private var scrollView: ScrollView? = null
+    private var progressBar: ProgressBar? = null
+
+    private var isScreenUnpinned = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -162,13 +160,25 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
         setSupportActionBar(toolbar)
         textView = findViewById(R.id.outputTextView)
         scrollView = findViewById(R.id.outputScrollView)
-        initLockTaskOrToolbarTitle(false)
+        progressBar = findViewById(R.id.progressBar)
+        serviceId = getString(R.string.service_id)
+        setScreenPinning()
 
         midiController.observeDevices(this, deviceAdapter)
-
-        serviceId = getString(R.string.service_id)
-        midiPayloadCallback = MidiPayloadCallback(midiController, this)
+        midiPayloadCallback = MidiPayloadCallback(midiController)
         midiConnectionCallback = MidiConnectionCallback(googleApiClient, midiPayloadCallback, this)
+    }
+
+    private fun setScreenPinning() {
+        findViewById<FloatingActionButton>(R.id.lock_task_button)?.setOnClickListener {
+            if (isScreenUnpinned) {
+                isScreenUnpinned = false
+                startLockTask()
+            } else {
+                isScreenUnpinned = true
+                stopLockTask()
+            }
+        }
     }
 
     private fun log(log: String) {
@@ -176,20 +186,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
         if (outputTextView != null && scrollView != null) {
             outputTextView.text = StringBuilder(log).append("\n").append(outputTextView.text).toString()
             scrollView!!.fullScroll(ScrollView.FOCUS_DOWN)
-        }
-    }
-
-    private fun initLockTaskOrToolbarTitle(initLockTaskButton: Boolean) {
-        supportActionBar?.apply {
-            if (!initLockTaskButton) {
-                setTitle(R.string.app_name)
-            }
-        }
-        findViewById<ToggleButton>(R.id.lock_task_button)?.apply {
-            setOnCheckedChangeListener { _, isChecked ->
-                if (isChecked) startLockTask() else stopLockTask()
-            }
-            visibility = if (initLockTaskButton) View.VISIBLE else View.GONE
         }
     }
 
