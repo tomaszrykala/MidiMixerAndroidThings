@@ -6,6 +6,8 @@ import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
+import com.tomaszrykala.common.MidiEventType
+import com.tomaszrykala.common.MidiEventWrapper
 import com.tomaszrykala.midimixerandroidthings.control.MixerButton
 import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 
@@ -89,12 +91,17 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
 
     override fun onPressed(button: MixerButton, pressed: Boolean) {
         if (endpoint != null) {
-            Log.d(MainActivity.TAG, "button A pressed:" + button)
             if (pressed) {
-                view.sendPayload(endpoint!!, button.channel, 64)
+                view.sendPayload(endpoint!!, MidiEventWrapper(MidiEventType.STATUS_NOTE_ON, button.channel, 64, 64))
             }
         } else {
             // TODO ?
+        }
+    }
+
+    override fun onControlChange(change: Int) {
+        if (endpoint != null) {
+            view.sendPayload(endpoint!!, MidiEventWrapper(MidiEventType.STATUS_CONTROL_CHANGE, 2, 64, 64))
         }
     }
 }

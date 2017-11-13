@@ -12,10 +12,10 @@ import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.DiscoveryOptions
 import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.Strategy
+import com.tomaszrykala.common.MidiEventWrapper
 import com.tomaszrykala.midimixerandroidthings.callback.MidiConnectionCallback
 import com.tomaszrykala.midimixerandroidthings.callback.MidiEndpointDiscoveryCallback
 import com.tomaszrykala.midimixerandroidthings.callback.MidiPayloadCallback
-import com.tomaszrykala.midimixerandroidthings.control.MCP3008
 import com.tomaszrykala.midimixerandroidthings.control.MidiControls
 import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 import kotlinx.android.synthetic.main.activity_main.*
@@ -26,11 +26,10 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
         val TAG = MainActivity::class.java.simpleName + "_THINGS"
     }
 
-    private val midiPresenter: MidiControllerContract.Presenter = MidiControllerPresenter(this, getString(R.string.service_id))
-    private val midiControls = MidiControls()
-    private val mcp = MCP3008.Controller()
-
+    private lateinit var midiPresenter: MidiControllerContract.Presenter
+    private lateinit var midiControls: MidiControls
     private lateinit var midiConnectionCallback: MidiConnectionCallback
+
     private lateinit var googleApiClient: GoogleApiClient
 
     private var textView: TextView? = null
@@ -43,6 +42,8 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
         textView = findViewById(R.id.outputTextView)
         scrollView = findViewById(R.id.outputScrollView)
 
+        midiPresenter = MidiControllerPresenter(this, getString(R.string.service_id))
+        midiControls = MidiControls(midiPresenter)
         midiConnectionCallback = MidiConnectionCallback(midiPresenter)
         googleApiClient = GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -68,8 +69,7 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
     override fun onStart() {
         super.onStart()
         midiPresenter.onStart()
-        midiControls.onStart(midiPresenter)
-        mcp.start() // TODO
+        midiControls.onStart()
     }
 
     override fun onStop() {
@@ -80,7 +80,6 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
     override fun onDestroy() {
         super.onDestroy()
         midiControls.onClose()
-        mcp.stop()
     }
 
     override fun startDiscovery(serviceId: String) {
@@ -119,11 +118,11 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
         }
     }
 
-    override fun sendPayload(endpointId: String, channel: Byte, note: Byte) {
+    override fun sendPayload(endpointId: String, wrapper: MidiEventWrapper) {
         Nearby.Connections.sendPayload(
                 googleApiClient,
                 endpointId,
-                Payload.fromBytes(byteArrayOf(channel, note, 64)))
+                Payload.fromBytes(byteArrayOf(wrapper.type(), wrapper.channel(), wrapper.note(), wrapper.pressure())))
     }
 
     private fun output(append: String) {

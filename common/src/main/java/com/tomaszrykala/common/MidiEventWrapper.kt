@@ -1,20 +1,39 @@
 package com.tomaszrykala.common
 
-class MidiEventWrapper(val data: ByteArray) {
+class MidiEventWrapper constructor(val type: MidiEventType, val data: ByteArray) {
+
+    constructor(type: MidiEventType, channel: Byte, note: Byte, pressure: Byte) :
+            this(type, byteArrayOf(channel, note, pressure))
 
     init {
         if (data.size != 3) throw IllegalArgumentException("Input data must be of size 3")
     }
 
-    fun channel(): Int {
-        return data[0].toInt()
+    fun type() :  Byte {
+        return type.byte
     }
 
-    fun note(): Int {
-        return data[1].toInt()
+    fun channel(): Byte {
+        return data[0]
     }
 
-    fun pressure(): Float {
-        return data[2].toFloat()
+    fun note(): Byte {
+        return data[1]
+    }
+
+    fun pressure(): Byte {
+        return data[2]
+    }
+
+    fun channelInt(): Int {
+        return channel().toInt()
+    }
+
+    fun noteInt(): Int {
+        return note().toInt()
+    }
+
+    fun pressureFloat(): Float {
+        return pressure().toFloat()
     }
 }
