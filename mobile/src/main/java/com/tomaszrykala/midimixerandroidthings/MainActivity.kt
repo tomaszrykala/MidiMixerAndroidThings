@@ -50,7 +50,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
         }
     }
 
-
     override fun onConnectionSuspended(p0: Int) {
         log("onConnectionSuspended")
     }
