@@ -9,7 +9,7 @@ class MidiEventWrapper constructor(val type: MidiEventType, val data: ByteArray)
         if (data.size != 3) throw IllegalArgumentException("Input data must be of size 3")
     }
 
-    fun type() :  Byte {
+    fun type(): Byte {
         return type.byte
     }
 
@@ -23,17 +23,5 @@ class MidiEventWrapper constructor(val type: MidiEventType, val data: ByteArray)
 
     fun pressure(): Byte {
         return data[2]
-    }
-
-    fun channelInt(): Int {
-        return channel().toInt()
-    }
-
-    fun noteInt(): Int {
-        return note().toInt()
-    }
-
-    fun pressureFloat(): Float {
-        return pressure().toFloat()
     }
 }

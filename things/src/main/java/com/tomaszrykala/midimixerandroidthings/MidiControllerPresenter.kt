@@ -26,6 +26,13 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
         val s = "onResultCallback:onResult: "
         Log.i(TAG, s + result.isSuccess)
         Log.i(TAG, s + result.status.statusCode.toString())
+        if (!result.isSuccess) {
+            if (endpoint != null) {
+                view.stopDiscovery(service)
+                endpoint = null
+            }
+            view.startDiscovery(service)
+        }
     }
 
     override fun onStart() {

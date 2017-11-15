@@ -15,7 +15,7 @@ interface MidiControllerContract {
 
         fun disconnect()
 
-        fun startDiscovery(serviceId: String)
+        fun startDiscovery(service: String)
 
         fun stopDiscovery(service: String)
 

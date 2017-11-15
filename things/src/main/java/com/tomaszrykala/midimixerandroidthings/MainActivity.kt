@@ -68,24 +68,28 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
 
     override fun onStart() {
         super.onStart()
+        log("onStart")
         midiPresenter.onStart()
         midiControls.onStart()
     }
 
     override fun onStop() {
         super.onStop()
+        log("onStop")
         midiPresenter.onStop()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        log("onDestroy")
         midiControls.onClose()
     }
 
-    override fun startDiscovery(serviceId: String) {
+    override fun startDiscovery(service: String) {
+        log("startDiscovery: " + service)
         Nearby.Connections.startDiscovery(
                 googleApiClient,
-                serviceId,
+                service,
                 MidiEndpointDiscoveryCallback(midiPresenter),
                 DiscoveryOptions(Strategy.P2P_STAR)
         ).setResultCallback { result ->
@@ -94,24 +98,29 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
     }
 
     override fun stopDiscovery(service: String) {
+        log("stopDiscovery: " + service)
         Nearby.Connections.stopDiscovery(googleApiClient)
     }
 
     override fun acceptConnection(endpointId: String) {
+        log("acceptConnection: " + endpointId)
         Nearby.Connections.acceptConnection(googleApiClient, endpointId, MidiPayloadCallback())
     }
 
     override fun connect() {
+        log("connect")
         googleApiClient.connect()
     }
 
     override fun disconnect() {
+        log("disconnect")
         if (googleApiClient.isConnected) {
             googleApiClient.disconnect()
         }
     }
 
     override fun requestConnection(endpointId: String, serviceId: String) {
+        log("requestConnection")
         Nearby.Connections.requestConnection(
                 googleApiClient,
                 serviceId,
@@ -129,27 +138,24 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
                 Payload.fromBytes(byteArrayOf(wrapper.type(), wrapper.channel(), wrapper.note(), wrapper.pressure())))
     }
 
-    private fun output(output: String) {
+    private fun log(log: String) {
+        Log.d(TAG, log)
         if (outputTextView != null && scrollView != null) {
-            outputTextView.text = StringBuilder(output).append(outputTextView.text).toString()
+            outputTextView.text = StringBuilder(log).append("\n").append(outputTextView.text).toString()
             scrollView!!.fullScroll(ScrollView.FOCUS_DOWN)
         }
-        Log.i(TAG, output)
     }
 
-    /** GoogleApiClient Callbacks */
-
     override fun onConnected(p0: Bundle?) {
+        log("onConnected")
         midiPresenter.onConnected()
     }
 
     override fun onConnectionSuspended(p0: Int) {
-        output("onConnectionSuspended")
+        log("onConnectionSuspended")
     }
 
     override fun onConnectionFailed(p0: ConnectionResult) {
-        output("onConnectionFailed")
+        log("onConnectionFailed")
     }
-
-    /** GoogleApiClient Callbacks */
 }
