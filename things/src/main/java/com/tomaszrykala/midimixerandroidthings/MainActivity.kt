@@ -93,6 +93,10 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
         }
     }
 
+    override fun stopDiscovery(service: String) {
+        Nearby.Connections.stopDiscovery(googleApiClient)
+    }
+
     override fun acceptConnection(endpointId: String) {
         Nearby.Connections.acceptConnection(googleApiClient, endpointId, MidiPayloadCallback())
     }

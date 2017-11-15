@@ -12,7 +12,6 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
-import com.tomaszrykala.common.MidiEventType
 import com.tomaszrykala.midimixerandroidthings.midi.MidiController
 import com.tomaszrykala.midimixerandroidthings.ui.DeviceAdapter
 import kotlinx.android.synthetic.main.activity_main.*
@@ -25,11 +24,11 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
     }
 
     override fun onConnected(p0: Bundle?) {
-        progressBar?.visibility = View.VISIBLE
         startAdvertising()
     }
 
     fun startAdvertising() {
+        progressBar?.visibility = View.VISIBLE
         Nearby.Connections.startAdvertising(
                 googleApiClient,
                 serviceId,
@@ -53,12 +52,10 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
 
 
     override fun onConnectionSuspended(p0: Int) {
-        progressBar?.visibility = View.INVISIBLE
         log("onConnectionSuspended")
     }
 
     override fun onConnectionFailed(p0: ConnectionResult) {
-        progressBar?.visibility = View.INVISIBLE
         log("onConnectionFailed")
     }
 
@@ -79,6 +76,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
                 ConnectionsStatusCodes.SUCCESS -> {
                     mainActivity.log("onConnectionResult OK")
                     Nearby.Connections.stopAdvertising(googleApiClient)
+                    mainActivity.progressBar?.visibility = View.INVISIBLE
                 }
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> mainActivity.log("onConnectionResult REJECTED")
                 else -> mainActivity.log("onConnectionResult not OK")
@@ -103,33 +101,14 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
 
             val data = payload?.asBytes()
             if (data is ByteArray && data.size == 4) {
-                val type = data[0]
-                val channel = data[1].toInt()
-                val note = data[2].toInt()
-                val pressure = data[3].toFloat()
-                when (type) {
-                    MidiEventType.STATUS_NOTE_ON.byte -> midiController.noteOn(
-                            channel,
-                            note,
-                            pressure)
-                    MidiEventType.STATUS_NOTE_OFF.byte -> midiController.noteOff(
-                            channel,
-                            note,
-                            pressure)
-                    MidiEventType.STATUS_CONTROL_CHANGE.byte -> midiController.controlChange(
-                            channel,
-                            note,
-                            pressure)
-                    else -> throw IllegalArgumentException("Unsupported payload type")
-                }
-
-                Log.d(TAG, "channel = $channel" + "note = $note" + "pressure = " + "$pressure")
+                val bytes = byteArrayOf((data[0] + data[1]).toByte(), data[2], data[3])
+                midiController.send(bytes, System.nanoTime())
             }
         }
 
         override fun onPayloadTransferUpdate(endpointId: String?, update: PayloadTransferUpdate?) {
+            // no - op
         }
-
     }
 
     val midiController: MidiController by viewModelProvider {
@@ -217,6 +196,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
 
     override fun onStop() {
         super.onStop()
+        Nearby.Connections.stopAdvertising(googleApiClient)
         if (googleApiClient.isConnected) {
             googleApiClient.disconnect()
         }

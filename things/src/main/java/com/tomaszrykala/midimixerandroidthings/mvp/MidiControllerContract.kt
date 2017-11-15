@@ -17,11 +17,14 @@ interface MidiControllerContract {
 
         fun startDiscovery(serviceId: String)
 
+        fun stopDiscovery(service: String)
+
         fun requestConnection(endpointId: String, serviceId: String)
 
         fun acceptConnection(endpointId: String)
 
         fun sendPayload(endpointId: String, wrapper: MidiEventWrapper)
+
     }
 
     interface Presenter {
@@ -29,8 +32,6 @@ interface MidiControllerContract {
         fun onStart()
 
         fun onStop()
-
-        fun onReset()
 
         fun onResultCallback(result: Status)
 
