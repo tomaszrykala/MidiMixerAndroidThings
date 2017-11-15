@@ -46,7 +46,10 @@
 package com.tomaszrykala.midimixerandroidthings.control;
 
 import android.os.Handler;
+import android.support.annotation.IntRange;
+import android.support.annotation.Nullable;
 import android.util.Log;
+import android.util.SparseArray;
 
 import com.google.android.things.pio.Gpio;
 import com.google.android.things.pio.PeripheralManagerService;
@@ -56,6 +59,11 @@ import java.io.IOException;
 public class MCP3008 {
 
     private static final String TAG = "MCP3008";
+
+    public interface Listener {
+
+        void onChange(int read);
+    }
 
     public static class Controller {
 
@@ -67,12 +75,14 @@ public class MCP3008 {
         private MCP3008 mMCP3008;
         private Handler mHandler;
 
+        private final SparseArray<Listener> listeners = new SparseArray<>();
+
         public void start() {
             try {
                 mMCP3008 = new MCP3008(CS_PIN, CLOCK_PIN, MOSI_PIN, MISO_PIN);
                 mMCP3008.register();
             } catch (IOException e) {
-                Log.e("MCP3008", "MCP initialization exception occurred: " + e.getMessage());
+                Log.d(TAG, "MCP initialization exception occurred: " + e.getMessage());
             }
 
             mHandler = new Handler();
@@ -80,6 +90,8 @@ public class MCP3008 {
         }
 
         public void stop() {
+            clearListeners();
+
             if (mMCP3008 != null) {
                 mMCP3008.unregister();
             }
@@ -87,6 +99,14 @@ public class MCP3008 {
             if (mHandler != null) {
                 mHandler.removeCallbacks(mReadAdcRunnable);
             }
+        }
+
+        public void setListener(@IntRange(from = 0, to = 7) int channel, @Nullable Listener listener) {
+            listeners.put(channel, listener);
+        }
+
+        void clearListeners() {
+            listeners.clear();
         }
 
         private Runnable mReadAdcRunnable = new Runnable() {
@@ -101,24 +121,30 @@ public class MCP3008 {
                 }
 
                 try {
-                    final int readAdc = Math.round(mMCP3008.readAdc(0x0) / 8);
-                    if (lastRead != readAdc) {
-                        lastRead = readAdc;
-                        Log.d(TAG, "ADC 0: " + lastRead);
-                    }
+                    readPotOne();
 
-//                    Log.e(TAG, "ADC 1: " + mMCP3008.readAdc(0x1));
-//                    Log.e(TAG, "ADC 2: " + mMCP3008.readAdc(0x2));
-//                    Log.e(TAG, "ADC 3: " + mMCP3008.readAdc(0x3));
-//                    Log.e(TAG, "ADC 4: " + mMCP3008.readAdc(0x4));
-//                    Log.e(TAG, "ADC 5: " + mMCP3008.readAdc(0x5));
-//                    Log.e(TAG, "ADC 6: " + mMCP3008.readAdc(0x6));
-//                    Log.e(TAG, "ADC 7: " + mMCP3008.readAdc(0x7));
+                    // TODO channels for future expansion
+                    Log.d(TAG, "ADC 1: " + mMCP3008.readAdc(0x1));
+                    Log.d(TAG, "ADC 2: " + mMCP3008.readAdc(0x2));
+                    Log.d(TAG, "ADC 3: " + mMCP3008.readAdc(0x3));
+                    Log.d(TAG, "ADC 4: " + mMCP3008.readAdc(0x4));
+                    Log.d(TAG, "ADC 5: " + mMCP3008.readAdc(0x5));
+                    Log.d(TAG, "ADC 6: " + mMCP3008.readAdc(0x6));
+                    Log.d(TAG, "ADC 7: " + mMCP3008.readAdc(0x7));
                 } catch (IOException e) {
-                    Log.e(TAG, "Something went wrong while reading from the ADC: " + e.getMessage());
+                    Log.d(TAG, "Something went wrong while reading from the ADC: " + e.getMessage());
                 }
 
                 mHandler.postDelayed(this, DELAY_MS);
+            }
+
+            private void readPotOne() throws IOException {
+                final int readAdc = Math.round(mMCP3008.readAdc(0x0) / 8);
+                if (lastRead != readAdc) {
+                    lastRead = readAdc;
+                    Log.d(TAG, "ADC 0: " + lastRead);
+                    listeners.get(0).onChange(lastRead);
+                }
             }
         };
     }
@@ -190,19 +216,19 @@ public class MCP3008 {
     }
 
     private void initChannelSelect(int channel) throws IOException {
-        int commandout = channel;
-        commandout |= 0x18; // start bit + single-ended bit
-        commandout <<= 0x3; // we only need to send 5 bits
+        int commandOut = channel;
+        commandOut |= 0x18; // start bit + single-ended bit
+        commandOut <<= 0x3; // we only need to send 5 bits
 
         for (int i = 0; i < 5; i++) {
 
-            if ((commandout & 0x80) != 0x0) {
+            if ((commandOut & 0x80) != 0x0) {
                 mMosiPin.setValue(true);
             } else {
                 mMosiPin.setValue(false);
             }
 
-            commandout <<= 0x1;
+            commandOut <<= 0x1;
 
             toggleClock();
         }

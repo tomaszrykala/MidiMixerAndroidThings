@@ -36,46 +36,18 @@ class MidiController(
                 }
             }
 
-    fun close() {
+    private fun close() {
         midiInputPort?.close()
         midiInputPort = null
         midiDevice?.close()
         midiDevice = null
     }
 
-    fun noteOn(channel: Int, note: Int, pressure: Float) =
-            midiInputPort?.send(
-                    MidiEvent.noteOn(channel, note, pressure.toMidiVelocity())
-            )
-
-    fun noteOff(channel: Int, note: Int, pressure: Float) =
-            midiInputPort?.send(
-                    MidiEvent.noteOff(channel, note, pressure.toMidiVelocity())
-            )
-
-    fun controlChange(channel: Int, note: Int, pressure: Float) =
-            midiInputPort?.send(
-                    MidiEvent.controlChange(channel, note, pressure.toMidiVelocity())
-            )
-
-    private fun Float.toMidiVelocity(): Int =
-            (Math.min(this.toDouble(), PRESSURE_CEILING) * PRESSURE_FACTOR).toInt()
-
-    private fun MidiInputPort.send(midiEvent: MidiEvent) =
-            midiEvent.bytes.also { msg ->
-                send(msg, 0, msg.size)
-            }
-
-    companion object {
-        private const val PRESSURE_CEILING = 1.0
-        private const val PRESSURE_FACTOR = 0x7F
+    fun send(msg: ByteArray, timestamp: Long) {
+        midiInputPort?.send(msg, 0, msg.size, timestamp)
     }
 
     fun closeAll() {
         //NO-OP yet
     }
-
-    fun removeObserver(observer: Observer<List<MidiDeviceInfo>>) =
-            midiDeviceMonitor.removeObserver(observer)
-
 }

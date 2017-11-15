@@ -4,6 +4,7 @@ import com.google.android.gms.common.api.Status
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
+import com.tomaszrykala.common.MidiEventWrapper
 import com.tomaszrykala.midimixerandroidthings.control.MixerButton
 
 interface MidiControllerContract {
@@ -14,13 +15,16 @@ interface MidiControllerContract {
 
         fun disconnect()
 
-        fun startDiscovery(serviceId: String)
+        fun startDiscovery(service: String)
+
+        fun stopDiscovery(service: String)
 
         fun requestConnection(endpointId: String, serviceId: String)
 
         fun acceptConnection(endpointId: String)
 
-        fun sendPayload(endpointId: String, channel: Byte, note: Byte)
+        fun sendPayload(endpointId: String, wrapper: MidiEventWrapper)
+
     }
 
     interface Presenter {
@@ -28,8 +32,6 @@ interface MidiControllerContract {
         fun onStart()
 
         fun onStop()
-
-        fun onReset()
 
         fun onResultCallback(result: Status)
 
@@ -46,5 +48,7 @@ interface MidiControllerContract {
         fun onConnected()
 
         fun onPressed(button: MixerButton, pressed: Boolean)
+
+        fun onControlChange(change: Int)
     }
 }

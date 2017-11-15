@@ -6,6 +6,8 @@ import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
+import com.tomaszrykala.common.MidiEventType
+import com.tomaszrykala.common.MidiEventWrapper
 import com.tomaszrykala.midimixerandroidthings.control.MixerButton
 import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 
@@ -13,14 +15,24 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
                               private val service: String) : MidiControllerContract.Presenter {
     companion object {
         val TAG = MidiControllerPresenter::class.java.simpleName
+
+        val DEFAULT_VELOCITY: Byte = 64
+        val DEFAULT_NOTE: Byte = 0
     }
 
     private var endpoint: String? = null
 
     override fun onResultCallback(result: Status) {
         val s = "onResultCallback:onResult: "
-        Log.d(TAG, s + result.isSuccess)
-        Log.d(TAG, s + result.status.statusCode.toString())
+        Log.i(TAG, s + result.isSuccess)
+        Log.i(TAG, s + result.status.statusCode.toString())
+        if (!result.isSuccess) {
+            if (endpoint != null) {
+                view.stopDiscovery(service)
+                endpoint = null
+            }
+            view.startDiscovery(service)
+        }
     }
 
     override fun onStart() {
@@ -31,10 +43,6 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
         view.disconnect()
     }
 
-    override fun onReset() {
-        view.startDiscovery(service)
-    }
-
     override fun onConnected() {
         view.startDiscovery(service)
     }
@@ -43,8 +51,6 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
         if (endpointId != null && endpointId != endpoint) {
             view.requestConnection(endpointId, service)
             endpoint = endpointId
-        } else {
-            // TODO something bad
         }
     }
 
@@ -59,7 +65,7 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
         if (endpointId != null) {
             endpoint = endpointId
             view.acceptConnection(endpointId)
-            Log.d(TAG, "onConnectionInitiated")
+            Log.i(TAG, "onConnectionInitiated")
         }
     }
 
@@ -67,19 +73,20 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
         if (endpoint != endpointId) {
             when (p1?.status?.statusCode) {
                 ConnectionsStatusCodes.STATUS_OK -> {
-                    Log.d(TAG, "onConnectionResult OK")
-                    // Nearby.Connections.stopDiscovery(googleApiClient)
+                    Log.i(TAG, "onConnectionResult OK")
+                    view.stopDiscovery(service)
                 }
-                ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> Log.d(TAG, "onConnectionResult REJECTED")
-                else -> Log.d(TAG, "onConnectionResult not OK")
+                else -> {
+                    Log.i(TAG, "onConnectionResult not OK")
+                    view.stopDiscovery(service)
+                    view.startDiscovery(service)
+                }
             }
-        } else {
-            // TODO ?
         }
     }
 
     override fun onDisconnected(endpointId: String?) {
-        Log.d(TAG, "onDisconnected")
+        Log.i(TAG, "onDisconnected")
         if (endpoint == endpointId) {
             view.startDiscovery(service)
             endpoint = null
@@ -89,12 +96,25 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
 
     override fun onPressed(button: MixerButton, pressed: Boolean) {
         if (endpoint != null) {
-            Log.d(MainActivity.TAG, "button A pressed:" + button)
             if (pressed) {
-                view.sendPayload(endpoint!!, button.channel, 64)
+                view.sendPayload(endpoint!!, MidiEventWrapper(
+                        MidiEventType.STATUS_NOTE_ON,
+                        button.channel,
+                        DEFAULT_NOTE,
+                        DEFAULT_VELOCITY))
             }
         } else {
             // TODO ?
+        }
+    }
+
+    override fun onControlChange(change: Int) {
+        if (endpoint != null) {
+            view.sendPayload(endpoint!!, MidiEventWrapper(
+                    MidiEventType.STATUS_CONTROL_CHANGE,
+                    2,
+                    DEFAULT_NOTE,
+                    change.toByte()))
         }
     }
 }
