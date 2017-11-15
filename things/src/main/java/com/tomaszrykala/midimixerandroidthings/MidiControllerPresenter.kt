@@ -8,7 +8,7 @@ import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import com.tomaszrykala.common.MidiEventType
 import com.tomaszrykala.common.MidiEventWrapper
-import com.tomaszrykala.midimixerandroidthings.control.MixerButton
+import com.tomaszrykala.midimixerandroidthings.control.MidiButton
 import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 
 class MidiControllerPresenter(private val view: MidiControllerContract.View,
@@ -36,11 +36,11 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
     }
 
     override fun onStart() {
-        view.connect()
+        view.start()
     }
 
     override fun onStop() {
-        view.disconnect()
+        view.stop()
     }
 
     override fun onConnected() {
@@ -94,27 +94,26 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
 
     }
 
-    override fun onPressed(button: MixerButton, pressed: Boolean) {
+    var lastMidiButtonPressed: MidiButton? = null
+
+    override fun onPressed(button: MidiButton, pressed: Boolean) {
         if (endpoint != null) {
             if (pressed) {
-                view.sendPayload(endpoint!!, MidiEventWrapper(
-                        MidiEventType.STATUS_NOTE_ON,
-                        button.channel,
-                        DEFAULT_NOTE,
-                        DEFAULT_VELOCITY))
+                if (lastMidiButtonPressed != button) {
+                    view.sendPayload(endpoint!!, MidiEventWrapper(
+                            MidiEventType.STATUS_NOTE_ON, button.channel, DEFAULT_NOTE, DEFAULT_VELOCITY))
+                    lastMidiButtonPressed = button
+                }
+            } else {
+                lastMidiButtonPressed = null
             }
-        } else {
-            // TODO ?
         }
     }
 
-    override fun onControlChange(change: Int) {
+    override fun onControlChange(change: Int, midiChannel: Byte) {
         if (endpoint != null) {
-            view.sendPayload(endpoint!!, MidiEventWrapper(
-                    MidiEventType.STATUS_CONTROL_CHANGE,
-                    2,
-                    DEFAULT_NOTE,
-                    change.toByte()))
+            view.sendPayload(endpoint!!, MidiEventWrapper( // channel hardcoded for now
+                    MidiEventType.STATUS_CONTROL_CHANGE, midiChannel, DEFAULT_NOTE, change.toByte()))
         }
     }
 }

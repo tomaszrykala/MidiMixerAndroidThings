@@ -35,7 +35,6 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
     private var textView: TextView? = null
     private var scrollView: ScrollView? = null
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -45,6 +44,7 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
         midiPresenter = MidiControllerPresenter(this, getString(R.string.service_id))
         midiControls = MidiControls(midiPresenter)
         midiConnectionCallback = MidiConnectionCallback(midiPresenter)
+
         googleApiClient = GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -52,25 +52,10 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
                 .build()
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        midiControls.mixerButtons
-                .filter { keyCode == it.key }
-                .forEach { midiPresenter.onPressed(it, true) }
-        return super.onKeyDown(keyCode, event)
-    }
-
-    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        midiControls.mixerButtons
-                .filter { keyCode == it.key }
-                .forEach { midiPresenter.onPressed(it, false) }
-        return super.onKeyUp(keyCode, event)
-    }
-
     override fun onStart() {
         super.onStart()
         log("onStart")
         midiPresenter.onStart()
-        midiControls.onStart()
     }
 
     override fun onStop() {
@@ -79,14 +64,20 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
         midiPresenter.onStop()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        log("onDestroy")
+    override fun start() {
+        midiControls.onStart()
+        googleApiClient.connect()
+    }
+
+    override fun stop() {
         midiControls.onClose()
+        if (googleApiClient.isConnected) {
+            googleApiClient.disconnect()
+        }
     }
 
     override fun startDiscovery(service: String) {
-        log("startDiscovery: " + service)
+        log("startDiscovery " + service)
         Nearby.Connections.startDiscovery(
                 googleApiClient,
                 service,
@@ -98,29 +89,17 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
     }
 
     override fun stopDiscovery(service: String) {
-        log("stopDiscovery: " + service)
+        log("stopDiscovery " + service)
         Nearby.Connections.stopDiscovery(googleApiClient)
     }
 
     override fun acceptConnection(endpointId: String) {
-        log("acceptConnection: " + endpointId)
+        log("acceptConnection " + endpointId)
         Nearby.Connections.acceptConnection(googleApiClient, endpointId, MidiPayloadCallback())
     }
 
-    override fun connect() {
-        log("connect")
-        googleApiClient.connect()
-    }
-
-    override fun disconnect() {
-        log("disconnect")
-        if (googleApiClient.isConnected) {
-            googleApiClient.disconnect()
-        }
-    }
-
     override fun requestConnection(endpointId: String, serviceId: String) {
-        log("requestConnection")
+        log("requestConnection " + endpointId)
         Nearby.Connections.requestConnection(
                 googleApiClient,
                 serviceId,
@@ -138,6 +117,16 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
                 Payload.fromBytes(byteArrayOf(wrapper.type(), wrapper.channel(), wrapper.note(), wrapper.pressure())))
     }
 
+    override fun onConnected(p0: Bundle?) {
+        midiPresenter.onConnected()
+    }
+
+    override fun onConnectionSuspended(p0: Int) {
+    }
+
+    override fun onConnectionFailed(p0: ConnectionResult) {
+    }
+
     private fun log(log: String) {
         Log.d(TAG, log)
         if (outputTextView != null && scrollView != null) {
@@ -146,16 +135,18 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
         }
     }
 
-    override fun onConnected(p0: Bundle?) {
-        log("onConnected")
-        midiPresenter.onConnected()
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        midiControls.midiButtons
+                .filter { keyCode == it.key }
+                .forEach { midiPresenter.onPressed(it, true) }
+        return super.onKeyDown(keyCode, event)
     }
 
-    override fun onConnectionSuspended(p0: Int) {
-        log("onConnectionSuspended")
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        midiControls.midiButtons
+                .filter { keyCode == it.key }
+                .forEach { midiPresenter.onPressed(it, false) }
+        return super.onKeyUp(keyCode, event)
     }
 
-    override fun onConnectionFailed(p0: ConnectionResult) {
-        log("onConnectionFailed")
-    }
 }

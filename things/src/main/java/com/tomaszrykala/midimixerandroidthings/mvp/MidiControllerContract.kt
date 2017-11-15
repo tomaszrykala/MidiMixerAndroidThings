@@ -5,15 +5,15 @@ import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import com.tomaszrykala.common.MidiEventWrapper
-import com.tomaszrykala.midimixerandroidthings.control.MixerButton
+import com.tomaszrykala.midimixerandroidthings.control.MidiButton
 
 interface MidiControllerContract {
 
     interface View {
 
-        fun connect()
+        fun start()
 
-        fun disconnect()
+        fun stop()
 
         fun startDiscovery(service: String)
 
@@ -47,8 +47,8 @@ interface MidiControllerContract {
 
         fun onConnected()
 
-        fun onPressed(button: MixerButton, pressed: Boolean)
+        fun onPressed(button: MidiButton, pressed: Boolean)
 
-        fun onControlChange(change: Int)
+        fun onControlChange(change: Int, midiChannel: Byte)
     }
 }

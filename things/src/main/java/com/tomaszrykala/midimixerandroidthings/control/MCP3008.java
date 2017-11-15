@@ -49,12 +49,13 @@ import android.os.Handler;
 import android.support.annotation.IntRange;
 import android.support.annotation.Nullable;
 import android.util.Log;
-import android.util.SparseArray;
 
 import com.google.android.things.pio.Gpio;
 import com.google.android.things.pio.PeripheralManagerService;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MCP3008 {
 
@@ -67,15 +68,15 @@ public class MCP3008 {
 
     public static class Controller {
 
-        static final String CS_PIN = "BCM8";    // "BCM12"
-        static final String CLOCK_PIN = "BCM11"; // "BCM21";
-        static final String MOSI_PIN = "BCM10";  // "BCM16"
-        static final String MISO_PIN = "BCM9";  // "BCM20"
+        static final String CS_PIN = "BCM8";
+        static final String CLOCK_PIN = "BCM11";
+        static final String MOSI_PIN = "BCM10";
+        static final String MISO_PIN = "BCM9";
 
         private MCP3008 mMCP3008;
         private Handler mHandler;
 
-        private final SparseArray<Listener> listeners = new SparseArray<>();
+        private final List<Listener> listeners = new ArrayList<>(8);
 
         public void start() {
             try {
@@ -101,8 +102,8 @@ public class MCP3008 {
             }
         }
 
-        public void setListener(@IntRange(from = 0, to = 7) int channel, @Nullable Listener listener) {
-            listeners.put(channel, listener);
+        public void setListener(@IntRange(from = 0, to = 7) int analogChannel, @Nullable Listener listener) {
+            listeners.add(analogChannel, listener);
         }
 
         void clearListeners() {
@@ -111,8 +112,8 @@ public class MCP3008 {
 
         private Runnable mReadAdcRunnable = new Runnable() {
 
-            private int lastRead;
             private static final long DELAY_MS = 100L; // 0.1 second
+            private final int[] lastReads = new int[8];
 
             @Override
             public void run() {
@@ -121,16 +122,14 @@ public class MCP3008 {
                 }
 
                 try {
-                    readPotOne();
-
-                    // TODO channels for future expansion
-                    Log.d(TAG, "ADC 1: " + mMCP3008.readAdc(0x1));
-                    Log.d(TAG, "ADC 2: " + mMCP3008.readAdc(0x2));
-                    Log.d(TAG, "ADC 3: " + mMCP3008.readAdc(0x3));
-                    Log.d(TAG, "ADC 4: " + mMCP3008.readAdc(0x4));
-                    Log.d(TAG, "ADC 5: " + mMCP3008.readAdc(0x5));
-                    Log.d(TAG, "ADC 6: " + mMCP3008.readAdc(0x6));
-                    Log.d(TAG, "ADC 7: " + mMCP3008.readAdc(0x7));
+                    for (int i = 0; i < listeners.size(); i++) {
+                        final int readAdc = Math.round(mMCP3008.readAdc(i) / 8);
+                        if (lastReads[i] != readAdc) {
+                            lastReads[i] = readAdc;
+                            Log.d(TAG, "ADC " + i + ": " + readAdc);
+                            listeners.get(i).onChange(readAdc);
+                        }
+                    }
                 } catch (IOException e) {
                     Log.d(TAG, "Something went wrong while reading from the ADC: " + e.getMessage());
                 }
@@ -138,14 +137,6 @@ public class MCP3008 {
                 mHandler.postDelayed(this, DELAY_MS);
             }
 
-            private void readPotOne() throws IOException {
-                final int readAdc = Math.round(mMCP3008.readAdc(0x0) / 8);
-                if (lastRead != readAdc) {
-                    lastRead = readAdc;
-                    Log.d(TAG, "ADC 0: " + lastRead);
-                    listeners.get(0).onChange(lastRead);
-                }
-            }
         };
     }
 

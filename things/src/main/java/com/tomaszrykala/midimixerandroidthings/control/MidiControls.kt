@@ -9,24 +9,26 @@ class MidiControls(private val presenter: MidiControllerContract.Presenter) {
 
     private lateinit var buttonInputDriverOne: ButtonInputDriver
     private lateinit var buttonInputDriverTwo: ButtonInputDriver
+    private lateinit var midiPotOne: MidiPot
+
     private lateinit var mcpController: MCP3008.Controller
 
-    val mixerButtons: MutableList<MixerButton> = mutableListOf()
+    val midiButtons: MutableList<MidiButton> = mutableListOf()
 
     fun onStart() {
-
-        buttonInputDriverOne = buttonInputDriver(MixerButton.BTN_CH1).apply {
+        buttonInputDriverOne = buttonInputDriver(MidiButton.BTN_CH1).apply {
             register()
-            mixerButtons.add(MixerButton.BTN_CH1)
+            midiButtons.add(MidiButton.BTN_CH1)
         }
-        buttonInputDriverTwo = buttonInputDriver(MixerButton.BTN_CH2).apply {
+        buttonInputDriverTwo = buttonInputDriver(MidiButton.BTN_CH2).apply {
             register()
-            mixerButtons.add(MixerButton.BTN_CH2)
+            midiButtons.add(MidiButton.BTN_CH2)
         }
-        mcpController = MCP3008.Controller().apply { start(); setListener(0, CCListener(presenter)) }
+        mcpController = MCP3008.Controller().apply { start() }
+        midiPotOne = MidiPot(mcpController, presenter, 0, 2).apply { start() }
     }
 
-    private fun buttonInputDriver(button: MixerButton): ButtonInputDriver {
+    private fun buttonInputDriver(button: MidiButton): ButtonInputDriver {
         return ButtonInputDriver(button.pin, Button.LogicState.PRESSED_WHEN_LOW, button.key)
     }
 
@@ -35,13 +37,8 @@ class MidiControls(private val presenter: MidiControllerContract.Presenter) {
         buttonInputDriverTwo.unregister()
         buttonInputDriverOne.close()
         buttonInputDriverTwo.close()
+
         mcpController.stop()
-    }
-
-    class CCListener(private val presenter: MidiControllerContract.Presenter) : MCP3008.Listener {
-
-        override fun onChange(read: Int) {
-            presenter.onControlChange(read)
-        }
+        midiPotOne.stop()
     }
 }
