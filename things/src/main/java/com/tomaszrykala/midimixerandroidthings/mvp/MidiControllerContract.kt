@@ -25,6 +25,7 @@ interface MidiControllerContract {
 
         fun sendPayload(endpointId: String, wrapper: MidiEventWrapper)
 
+        fun log(log: String)
     }
 
     interface Presenter {

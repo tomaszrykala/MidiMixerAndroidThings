@@ -127,7 +127,8 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
     override fun onConnectionFailed(p0: ConnectionResult) {
     }
 
-    private fun log(log: String) {
+    // TODO ugly but otherwise after connection no way of knowing when something has gone wrong
+    override fun log(log: String) {
         Log.d(TAG, log)
         if (outputTextView != null && scrollView != null) {
             outputTextView.text = StringBuilder(log).append("\n").append(outputTextView.text).toString()

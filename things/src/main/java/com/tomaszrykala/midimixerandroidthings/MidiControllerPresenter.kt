@@ -1,6 +1,5 @@
 package com.tomaszrykala.midimixerandroidthings
 
-import android.util.Log
 import com.google.android.gms.common.api.Status
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
@@ -14,8 +13,6 @@ import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 class MidiControllerPresenter(private val view: MidiControllerContract.View,
                               private val service: String) : MidiControllerContract.Presenter {
     companion object {
-        val TAG = MidiControllerPresenter::class.java.simpleName
-
         val DEFAULT_VELOCITY: Byte = 64
         val DEFAULT_NOTE: Byte = 0
     }
@@ -24,8 +21,8 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
 
     override fun onResultCallback(result: Status) {
         val s = "onResultCallback:onResult: "
-        Log.i(TAG, s + result.isSuccess)
-        Log.i(TAG, s + result.status.statusCode.toString())
+        view.log(s + result.isSuccess)
+        view.log(s + result.status.statusCode.toString())
         if (!result.isSuccess) {
             if (endpoint != null) {
                 view.stopDiscovery(service)
@@ -48,6 +45,7 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
     }
 
     override fun onEndpointFound(endpointId: String?, discoveredEndpointInfo: DiscoveredEndpointInfo?) {
+        view.log("onEndpointFound: " + endpointId)
         if (endpointId != null && endpointId != endpoint) {
             view.requestConnection(endpointId, service)
             endpoint = endpointId
@@ -55,6 +53,7 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
     }
 
     override fun onEndpointLost(endpointId: String?) {
+        view.log("onEndpointLost: " + endpointId)
         if (endpointId == endpoint) {
             view.startDiscovery(service)
             endpoint = null
@@ -62,10 +61,10 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
     }
 
     override fun onConnectionInitiated(endpointId: String?, info: ConnectionInfo?) {
+        view.log("onConnectionInitiated: $endpointId; info: $info")
         if (endpointId != null) {
             endpoint = endpointId
             view.acceptConnection(endpointId)
-            Log.i(TAG, "onConnectionInitiated")
         }
     }
 
@@ -73,11 +72,11 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
         if (endpoint != endpointId) {
             when (p1?.status?.statusCode) {
                 ConnectionsStatusCodes.STATUS_OK -> {
-                    Log.i(TAG, "onConnectionResult OK")
+                    view.log("onConnectionResult OK")
                     view.stopDiscovery(service)
                 }
                 else -> {
-                    Log.i(TAG, "onConnectionResult not OK")
+                    view.log("onConnectionResult not OK")
                     view.stopDiscovery(service)
                     view.startDiscovery(service)
                 }
@@ -86,7 +85,7 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
     }
 
     override fun onDisconnected(endpointId: String?) {
-        Log.i(TAG, "onDisconnected")
+        view.log("onDisconnected")
         if (endpoint == endpointId) {
             view.startDiscovery(service)
             endpoint = null
@@ -112,7 +111,7 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
 
     override fun onControlChange(change: Int, midiChannel: Byte) {
         if (endpoint != null) {
-            view.sendPayload(endpoint!!, MidiEventWrapper( // channel hardcoded for now
+            view.sendPayload(endpoint!!, MidiEventWrapper(
                     MidiEventType.STATUS_CONTROL_CHANGE, midiChannel, DEFAULT_NOTE, change.toByte()))
         }
     }
