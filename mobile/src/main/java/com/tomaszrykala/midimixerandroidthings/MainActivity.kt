@@ -1,6 +1,9 @@
 package com.tomaszrykala.midimixerandroidthings
 
+import android.app.ActivityManager
 import android.arch.lifecycle.LifecycleRegistry
+import android.content.Context
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
 import android.support.v7.app.AppCompatActivity
@@ -28,7 +31,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
     }
 
     fun startAdvertising() {
-        progressBar?.visibility = View.VISIBLE
+        progressBar.visibility = View.VISIBLE
         Nearby.Connections.startAdvertising(
                 googleApiClient,
                 serviceId,
@@ -61,10 +64,6 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
     private val lifecycleRegistry: LifecycleRegistry by lazyFast { LifecycleRegistry(this) }
     override fun getLifecycle(): LifecycleRegistry = lifecycleRegistry
 
-    private lateinit var serviceId: String
-    private lateinit var midiPayloadCallback: MidiPayloadCallback
-    private lateinit var midiConnectionCallback: MidiConnectionCallback
-
     class MidiConnectionCallback(private val googleApiClient: GoogleApiClient,
                                  private val midiPayloadCallback: MidiPayloadCallback,
                                  private val mainActivity: MainActivity) : ConnectionLifecycleCallback() {
@@ -75,7 +74,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
                 ConnectionsStatusCodes.SUCCESS -> {
                     mainActivity.log("onConnectionResult OK")
                     Nearby.Connections.stopAdvertising(googleApiClient)
-                    mainActivity.progressBar?.visibility = View.INVISIBLE
+                    mainActivity.progressBar.visibility = View.INVISIBLE
                 }
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> mainActivity.log("onConnectionResult REJECTED")
                 else -> mainActivity.log("onConnectionResult not OK")
@@ -126,20 +125,31 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
                 .build()
     }
 
-    private var textView: TextView? = null
-    private var scrollView: ScrollView? = null
-    private var progressBar: ProgressBar? = null
+    private lateinit var textView: TextView
+    private lateinit var scrollView: ScrollView
+    private lateinit var progressBar: ProgressBar
+    private lateinit var floatingActionButton: FloatingActionButton
 
-    private var isScreenUnpinned = true
+    private lateinit var serviceId: String
+    private lateinit var midiPayloadCallback: MidiPayloadCallback
+    private lateinit var midiConnectionCallback: MidiConnectionCallback
+
+    private lateinit var lockOpen: Drawable
+    private lateinit var lockClosed: Drawable
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+        serviceId = getString(R.string.service_id)
+        lockOpen = getDrawable(R.drawable.ic_lock_open_black_24dp)
+        lockClosed = getDrawable(R.drawable.ic_lock_black_24dp)
+
         textView = findViewById(R.id.outputTextView)
         scrollView = findViewById(R.id.outputScrollView)
         progressBar = findViewById(R.id.progressBar)
-        serviceId = getString(R.string.service_id)
+        floatingActionButton = findViewById(R.id.lock_task_button)
+
         setScreenPinning()
 
         midiController.observeDevices(this, deviceAdapter)
@@ -147,23 +157,36 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
         midiConnectionCallback = MidiConnectionCallback(googleApiClient, midiPayloadCallback, this)
     }
 
+    private fun isLocked(): Boolean {
+        return (getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager)
+                .lockTaskModeState != ActivityManager.LOCK_TASK_MODE_NONE
+    }
+
     private fun setScreenPinning() {
-        findViewById<FloatingActionButton>(R.id.lock_task_button)?.setOnClickListener {
-            if (isScreenUnpinned) {
-                isScreenUnpinned = false
-                startLockTask()
-            } else {
-                isScreenUnpinned = true
+        // init state
+        if (isLocked()) {
+            floatingActionButton.setImageDrawable(lockClosed)
+        } else {
+            floatingActionButton.setImageDrawable(lockOpen)
+        }
+
+        // following states
+        floatingActionButton.setOnClickListener {
+            if (isLocked()) {
+                floatingActionButton.setImageDrawable(lockOpen)
                 stopLockTask()
+            } else {
+                floatingActionButton.setImageDrawable(lockClosed)
+                startLockTask()
             }
         }
     }
 
     private fun log(log: String) {
         Log.d(TAG, log)
-        if (outputTextView != null && scrollView != null) {
+        if (outputTextView != null) {
             outputTextView.text = StringBuilder(log).append("\n").append(outputTextView.text).toString()
-            scrollView!!.fullScroll(ScrollView.FOCUS_DOWN)
+            scrollView.fullScroll(ScrollView.FOCUS_DOWN)
         }
     }
 
