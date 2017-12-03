@@ -7,13 +7,12 @@ import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 
 class MidiControls(private val presenter: MidiControllerContract.Presenter) {
 
+    private val mcpController: MCP3008.Controller = MCP3008.Controller().apply { start() }
+    private val midiPots: MutableList<MidiPot> = mutableListOf()
+    val midiButtons: MutableList<MidiButton> = mutableListOf()
+
     private lateinit var buttonInputDriverOne: ButtonInputDriver
     private lateinit var buttonInputDriverTwo: ButtonInputDriver
-    private lateinit var midiPotOne: MidiPot
-
-    private lateinit var mcpController: MCP3008.Controller
-
-    val midiButtons: MutableList<MidiButton> = mutableListOf()
 
     fun onStart() {
         buttonInputDriverOne = buttonInputDriver(MidiButton.BTN_CH1).apply {
@@ -24,8 +23,10 @@ class MidiControls(private val presenter: MidiControllerContract.Presenter) {
             register()
             midiButtons.add(MidiButton.BTN_CH2)
         }
-        mcpController = MCP3008.Controller().apply { start() }
-        midiPotOne = MidiPot(mcpController, presenter, 0, 2).apply { start() }
+
+        (0..3).mapTo(midiPots) {
+            MidiPot(mcpController, presenter, it, (midiButtons.size + it).toByte()).apply { start() }
+        }
     }
 
     private fun buttonInputDriver(button: MidiButton): ButtonInputDriver {
@@ -38,7 +39,7 @@ class MidiControls(private val presenter: MidiControllerContract.Presenter) {
         buttonInputDriverOne.close()
         buttonInputDriverTwo.close()
 
+        midiPots.forEach { it.stop() }
         mcpController.stop()
-        midiPotOne.stop()
     }
 }
