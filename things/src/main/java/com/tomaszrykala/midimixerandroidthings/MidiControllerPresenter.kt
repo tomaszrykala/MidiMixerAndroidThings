@@ -86,11 +86,9 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
 
     override fun onDisconnected(endpointId: String?) {
         view.log("onDisconnected")
-        if (endpoint == endpointId) {
-            view.startDiscovery(service)
-            endpoint = null
-        }
-
+        view.stopDiscovery(endpoint!!)
+        view.startDiscovery(service)
+        endpoint = null
     }
 
     var lastMidiButtonPressed: MidiButton? = null
