@@ -27,11 +27,11 @@ class Driver {
     }
 
     private class Imx7BoardDefaults : BoardDefaults {
-        override val spio0: String = "SPI3 (SS0)" // "SPI3.0" // GPIO6_IO26
-        override val spio1: String = "SPI3 (SS1)" // "SPI3.1" // GPIO6_IO24
-        override val miso: String = "SPI3 (MISO)" // GPIO6_IO23
-        override val mosi: String = "SPI3 (MOSI)" // GPIO6_IO19
-        override val sclk: String = "SPI3 (SCLK)" // GPIO6_IO23
+        override val spio0: String = "GPIO6_IO12" // "SPI3.0"
+        override val spio1: String = "GPIO5_IO00" // "SPI3.1"
+        override val miso: String = "GPIO1_IO10" // "SPI3 (MISO)"
+        override val mosi: String = "GPIO2_IO03" // "SPI3 (MOSI)"
+        override val sclk: String = "GPIO6_IO13" // "SPI3 (SCLK)"
 
         override val btn0: String = "GPIO6_IO14"
         override val btn1: String = "GPIO6_IO15"
