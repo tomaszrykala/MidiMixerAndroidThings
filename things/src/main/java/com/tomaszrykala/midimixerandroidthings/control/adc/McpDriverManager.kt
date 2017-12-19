@@ -15,7 +15,7 @@ class McpDriverManager(private val presenter: MidiControllerContract.Presenter) 
 
     fun start() {
         mixerMcpDriver.start()
-        (0..6).mapTo(mixerMidiPots) {
+        (0..7).mapTo(mixerMidiPots) {
             MidiPot(mixerMcpDriver, presenter, it, (mixerAdcStartChannel + it).toByte()).apply { start() }
         }
     }
