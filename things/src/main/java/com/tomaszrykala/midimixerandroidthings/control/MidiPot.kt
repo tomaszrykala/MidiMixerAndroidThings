@@ -1,21 +1,23 @@
 package com.tomaszrykala.midimixerandroidthings.control
 
+import com.tomaszrykala.midimixerandroidthings.control.adc.McpDriver
+import com.tomaszrykala.midimixerandroidthings.control.adc.McpDriver.Listener
 import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 
-class MidiPot constructor(private val mcpController: MCP3008.Controller,
+class MidiPot constructor(private val mcpDriver: McpDriver,
                           private val presenter: MidiControllerContract.Presenter,
                           private val analogChannel: Int,
-                          private val midiChannel: Byte) : MCP3008.Listener {
+                          private val midiChannel: Byte) : Listener {
 
     override fun onChange(read: Int) {
         presenter.onControlChange(read, midiChannel)
     }
 
     fun start() {
-        mcpController.setListener(analogChannel, this)
+        mcpDriver.addListener(analogChannel, this)
     }
 
     fun stop() {
-        mcpController.setListener(analogChannel, null)
+        mcpDriver.addListener(analogChannel, null)
     }
 }
