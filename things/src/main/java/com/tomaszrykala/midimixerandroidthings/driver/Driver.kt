@@ -1,7 +1,5 @@
 package com.tomaszrykala.midimixerandroidthings.driver
 
-import android.os.Build
-
 class Driver {
 
     private interface BoardDefaults {
@@ -26,18 +24,7 @@ class Driver {
         override val btn1: String = "BCM20"
     }
 
-    private class Imx7BoardDefaults : BoardDefaults {
-        override val spio0: String = "GPIO6_IO12" // "SPI3.0"
-        override val spio1: String = "GPIO5_IO00" // "SPI3.1"
-        override val miso: String = "GPIO1_IO10" // "SPI3 (MISO)"
-        override val mosi: String = "GPIO2_IO03" // "SPI3 (MOSI)"
-        override val sclk: String = "GPIO6_IO13" // "SPI3 (SCLK)"
-
-        override val btn0: String = "GPIO6_IO14"
-        override val btn1: String = "GPIO6_IO15"
-    }
-
-    private val boardDefaults = if (Build.DEVICE == "rpi3") Rpi3BoardDefaults() else Imx7BoardDefaults()
+    private val boardDefaults = Rpi3BoardDefaults()
 
     fun getSpio0(): String {
         return boardDefaults.spio0

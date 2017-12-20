@@ -4,13 +4,14 @@ import com.tomaszrykala.midimixerandroidthings.control.adc.McpDriver
 import com.tomaszrykala.midimixerandroidthings.control.adc.McpDriver.Listener
 import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 
-class MidiPot constructor(private val mcpDriver: McpDriver,
-                          private val presenter: MidiControllerContract.Presenter,
-                          private val analogChannel: Int,
-                          private val midiChannel: Byte) : Listener {
+class MidiPot(private val mcpDriver: McpDriver,
+              private val presenter: MidiControllerContract.Presenter,
+              private val analogChannel: Int,
+              private val midiChannel: Byte,
+              private val key: Byte) : Listener {
 
     override fun onChange(read: Int) {
-        presenter.onControlChange(read, midiChannel)
+        presenter.onControlChange(read, midiChannel, key)
     }
 
     fun start() {
