@@ -107,10 +107,10 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
         }
     }
 
-    override fun onControlChange(change: Int, midiChannel: Byte) {
+    override fun onControlChange(change: Int, midiChannel: Byte, key: Byte) {
         if (endpoint != null) {
             view.sendPayload(endpoint!!, MidiEventWrapper(
-                    MidiEventType.STATUS_CONTROL_CHANGE, midiChannel, DEFAULT_NOTE, change.toByte()))
+                    MidiEventType.STATUS_CONTROL_CHANGE, midiChannel, key, change.toByte()))
         }
     }
 }

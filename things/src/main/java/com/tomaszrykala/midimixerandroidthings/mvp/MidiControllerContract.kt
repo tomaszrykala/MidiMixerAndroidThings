@@ -50,6 +50,6 @@ interface MidiControllerContract {
 
         fun onPressed(button: MidiButton, pressed: Boolean)
 
-        fun onControlChange(change: Int, midiChannel: Byte)
+        fun onControlChange(change: Int, midiChannel: Byte, key: Byte)
     }
 }
