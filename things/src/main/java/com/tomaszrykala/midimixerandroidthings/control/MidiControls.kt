@@ -10,34 +10,29 @@ class MidiControls(presenter: MidiControllerContract.Presenter) {
 
     private val driver: Driver = Driver()
     private val mcpDriverManager: McpDriverManager = McpDriverManager(presenter, driver)
+    private val midiButtonDrivers: MutableList<ButtonInputDriver> = mutableListOf()
 
     val midiButtons: MutableList<MidiButton> = mutableListOf()
-    private lateinit var buttonInputDriverOne: ButtonInputDriver
-    private lateinit var buttonInputDriverTwo: ButtonInputDriver
 
     fun onStart() {
-        buttonInputDriverOne = buttonInputDriver(driver.getBtn0(), MidiButton.BTN_CH1).apply {
-            register()
-            midiButtons.add(MidiButton.BTN_CH1)
-        }
-        buttonInputDriverTwo = buttonInputDriver(driver.getBtn1(), MidiButton.BTN_CH2).apply {
-            register()
-            midiButtons.add(MidiButton.BTN_CH2)
-        }
+        midiButtonDrivers.add(buttonInputDriver(driver.getBtn0(), MidiButton.BTN_CH0))
+        midiButtonDrivers.add(buttonInputDriver(driver.getBtn1(), MidiButton.BTN_CH1))
 
         mcpDriverManager.start()
     }
 
-    private fun buttonInputDriver(pin: String, button: MidiButton): ButtonInputDriver {
-        return ButtonInputDriver(pin, Button.LogicState.PRESSED_WHEN_LOW, button.key)
+    private fun buttonInputDriver(pin: String, midiButton: MidiButton): ButtonInputDriver {
+        return ButtonInputDriver(pin, Button.LogicState.PRESSED_WHEN_LOW, midiButton.key).apply {
+            register()
+            midiButtons.add(midiButton)
+        }
     }
 
     fun onClose() {
-        buttonInputDriverOne.unregister()
-        buttonInputDriverTwo.unregister()
-        buttonInputDriverOne.close()
-        buttonInputDriverTwo.close()
-
+        midiButtonDrivers.forEach {
+            it.unregister()
+            it.close()
+        }
         mcpDriverManager.stop()
     }
 }
