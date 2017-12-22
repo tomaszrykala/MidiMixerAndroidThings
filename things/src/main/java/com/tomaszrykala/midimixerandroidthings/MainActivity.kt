@@ -127,7 +127,6 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
     override fun onConnectionFailed(p0: ConnectionResult) {
     }
 
-    // TODO ugly but otherwise after connection no way of knowing when something has gone wrong
     override fun log(log: String) {
         Log.d(TAG, log)
         if (outputTextView != null && scrollView != null) {
@@ -137,17 +136,19 @@ class MainActivity : Activity(), MidiControllerContract.View, GoogleApiClient.Co
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        midiControls.midiButtons
-                .filter { keyCode == it.key }
-                .forEach { midiPresenter.onPressed(it, true) }
+        onKey(keyCode, true)
         return super.onKeyDown(keyCode, event)
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        midiControls.midiButtons
-                .filter { keyCode == it.key }
-                .forEach { midiPresenter.onPressed(it, false) }
+        onKey(keyCode, false)
         return super.onKeyUp(keyCode, event)
+    }
+
+    private fun onKey(keyCode: Int, pressed: Boolean) {
+        midiControls.midiButtons
+                .filter { keyCode == it.keyCode }
+                .forEach { midiPresenter.onNoteOn(it, pressed) }
     }
 
 }

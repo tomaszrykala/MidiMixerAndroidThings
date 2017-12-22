@@ -7,11 +7,11 @@ import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 class MidiPot(private val mcpDriver: McpDriver,
               private val presenter: MidiControllerContract.Presenter,
               private val analogChannel: Int,
-              private val midiChannel: Byte,
-              private val key: Byte) : Listener {
+              val midiChannel: Byte,
+              val key: Byte) : Listener {
 
     override fun onChange(read: Int) {
-        presenter.onControlChange(read, midiChannel, key)
+        presenter.onControlChange(this, read.toByte())
     }
 
     fun start() {

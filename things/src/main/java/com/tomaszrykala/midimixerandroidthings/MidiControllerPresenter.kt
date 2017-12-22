@@ -8,16 +8,14 @@ import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import com.tomaszrykala.common.MidiEventType
 import com.tomaszrykala.common.MidiEventWrapper
 import com.tomaszrykala.midimixerandroidthings.control.MidiButton
+import com.tomaszrykala.midimixerandroidthings.control.MidiPot
 import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 
 class MidiControllerPresenter(private val view: MidiControllerContract.View,
                               private val service: String) : MidiControllerContract.Presenter {
-    companion object {
-        val DEFAULT_VELOCITY: Byte = 64
-        val DEFAULT_NOTE: Byte = 0
-    }
 
     private var endpoint: String? = null
+    var lastMidiButtonPressed: MidiButton? = null
 
     override fun onResultCallback(result: Status) {
         val s = "onResultCallback:onResult: "
@@ -91,15 +89,13 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
         endpoint = null
     }
 
-    var lastMidiButtonPressed: MidiButton? = null
-
-    override fun onPressed(button: MidiButton, pressed: Boolean) {
-        if (endpoint != null) {
+    override fun onNoteOn(midiButton: MidiButton, pressed: Boolean) {
+        endpoint?.apply {
             if (pressed) {
-                if (lastMidiButtonPressed != button) {
-                    view.sendPayload(endpoint!!, MidiEventWrapper(
-                            MidiEventType.STATUS_NOTE_ON, button.channel, DEFAULT_NOTE, DEFAULT_VELOCITY))
-                    lastMidiButtonPressed = button
+                if (lastMidiButtonPressed != midiButton) {
+                    view.sendPayload(endpoint!!,
+                            MidiEventWrapper(MidiEventType.STATUS_NOTE_ON, midiButton.midiChannel, midiButton.key, midiButton.velocity))
+                    lastMidiButtonPressed = midiButton
                 }
             } else {
                 lastMidiButtonPressed = null
@@ -107,10 +103,10 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
         }
     }
 
-    override fun onControlChange(change: Int, midiChannel: Byte, key: Byte) {
-        if (endpoint != null) {
-            view.sendPayload(endpoint!!, MidiEventWrapper(
-                    MidiEventType.STATUS_CONTROL_CHANGE, midiChannel, key, change.toByte()))
+    override fun onControlChange(midiPot: MidiPot, velocity: Byte) {
+        endpoint?.apply {
+            view.sendPayload(endpoint!!,
+                    MidiEventWrapper(MidiEventType.STATUS_CONTROL_CHANGE, midiPot.midiChannel, midiPot.key, velocity))
         }
     }
 }
