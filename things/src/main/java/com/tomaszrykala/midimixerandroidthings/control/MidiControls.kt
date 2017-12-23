@@ -12,13 +12,19 @@ class MidiControls(presenter: MidiControllerContract.Presenter) {
     private val driver: Driver = Driver()
     private val mcpDriverManager: McpDriverManager = McpDriverManager(presenter, driver)
     private val midiButtonDrivers: MutableList<ButtonInputDriver> = mutableListOf()
+    private val midiButtonMapping: Map<String, Int> = mapOf(
+            driver.getBtn0() to KeyEvent.KEYCODE_0,
+            driver.getBtn1() to KeyEvent.KEYCODE_1,
+            driver.getBtn2() to KeyEvent.KEYCODE_2,
+            driver.getBtn3() to KeyEvent.KEYCODE_3
+    )
 
     val midiButtons: MutableList<MidiButton> = mutableListOf()
 
     fun onStart() {
-        midiButtonDrivers.add(buttonInputDriver(driver.getBtn0(), MidiButton(KeyEvent.KEYCODE_0, 0)))
-        midiButtonDrivers.add(buttonInputDriver(driver.getBtn1(), MidiButton(KeyEvent.KEYCODE_1, 1)))
-
+        midiButtonMapping.asIterable().forEachIndexed { index, entry ->
+            midiButtonDrivers.add(buttonInputDriver(entry.key, MidiButton(entry.value, index.toByte())))
+        }
         mcpDriverManager.start()
     }
 
