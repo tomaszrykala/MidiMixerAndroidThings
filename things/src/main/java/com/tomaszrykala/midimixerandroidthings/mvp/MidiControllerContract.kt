@@ -6,6 +6,7 @@ import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import com.tomaszrykala.common.MidiEventWrapper
 import com.tomaszrykala.midimixerandroidthings.control.MidiButton
+import com.tomaszrykala.midimixerandroidthings.control.MidiPot
 
 interface MidiControllerContract {
 
@@ -48,8 +49,8 @@ interface MidiControllerContract {
 
         fun onConnected()
 
-        fun onPressed(button: MidiButton, pressed: Boolean)
+        fun onNoteOn(midiButton: MidiButton, pressed: Boolean)
 
-        fun onControlChange(change: Int, midiChannel: Byte, key: Byte)
+        fun onControlChange(midiPot: MidiPot, velocity: Byte)
     }
 }

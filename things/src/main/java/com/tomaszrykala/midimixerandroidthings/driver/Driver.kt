@@ -11,6 +11,8 @@ class Driver {
 
         val btn0: String
         val btn1: String
+        val btn2: String
+        val btn3: String
     }
 
     private class Rpi3BoardDefaults : BoardDefaults {
@@ -20,8 +22,10 @@ class Driver {
         override val mosi: String = "BCM10"
         override val sclk: String = "BCM11"
 
-        override val btn0: String = "BCM21"
-        override val btn1: String = "BCM20"
+        override val btn0: String = "BCM26"
+        override val btn1: String = "BCM13"
+        override val btn2: String = "BCM6"
+        override val btn3: String = "BCM5"
     }
 
     private val boardDefaults = Rpi3BoardDefaults()
@@ -52,5 +56,13 @@ class Driver {
 
     fun getBtn1(): String {
         return boardDefaults.btn1
+    }
+
+    fun getBtn2(): String {
+        return boardDefaults.btn2
+    }
+
+    fun getBtn3(): String {
+        return boardDefaults.btn3
     }
 }

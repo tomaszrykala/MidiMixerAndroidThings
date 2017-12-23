@@ -1,5 +1,6 @@
 package com.tomaszrykala.midimixerandroidthings.control
 
+import android.view.KeyEvent
 import com.google.android.things.contrib.driver.button.Button
 import com.google.android.things.contrib.driver.button.ButtonInputDriver
 import com.tomaszrykala.midimixerandroidthings.control.adc.McpDriverManager
@@ -11,18 +12,24 @@ class MidiControls(presenter: MidiControllerContract.Presenter) {
     private val driver: Driver = Driver()
     private val mcpDriverManager: McpDriverManager = McpDriverManager(presenter, driver)
     private val midiButtonDrivers: MutableList<ButtonInputDriver> = mutableListOf()
+    private val midiButtonMapping: Map<String, Int> = mapOf(
+            driver.getBtn0() to KeyEvent.KEYCODE_0,
+            driver.getBtn1() to KeyEvent.KEYCODE_1,
+            driver.getBtn2() to KeyEvent.KEYCODE_2,
+            driver.getBtn3() to KeyEvent.KEYCODE_3
+    )
 
     val midiButtons: MutableList<MidiButton> = mutableListOf()
 
     fun onStart() {
-        midiButtonDrivers.add(buttonInputDriver(driver.getBtn0(), MidiButton.BTN_CH0))
-        midiButtonDrivers.add(buttonInputDriver(driver.getBtn1(), MidiButton.BTN_CH1))
-
+        midiButtonMapping.asIterable().forEachIndexed { index, entry ->
+            midiButtonDrivers.add(buttonInputDriver(entry.key, MidiButton(entry.value, index.toByte())))
+        }
         mcpDriverManager.start()
     }
 
     private fun buttonInputDriver(pin: String, midiButton: MidiButton): ButtonInputDriver {
-        return ButtonInputDriver(pin, Button.LogicState.PRESSED_WHEN_LOW, midiButton.key).apply {
+        return ButtonInputDriver(pin, Button.LogicState.PRESSED_WHEN_LOW, midiButton.keyCode).apply {
             register()
             midiButtons.add(midiButton)
         }
