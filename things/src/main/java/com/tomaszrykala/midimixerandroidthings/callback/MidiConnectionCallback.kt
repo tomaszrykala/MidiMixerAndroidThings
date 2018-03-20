@@ -1,21 +1,18 @@
 package com.tomaszrykala.midimixerandroidthings.callback
 
-import com.google.android.gms.nearby.connection.ConnectionInfo
-import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
-import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 
-class MidiConnectionCallback(private val midiPresenter: MidiControllerContract.Presenter) : ConnectionLifecycleCallback() {
+class MidiConnectionCallback(private val midiPresenter: MidiControllerContract.Presenter) {
 
-    override fun onConnectionResult(endpointId: String?, p1: ConnectionResolution?) {
-        midiPresenter.onConnectionResult(endpointId, p1)
+    fun onConnectionResult(endpointId: String?) {
+        midiPresenter.onConnectionResult(endpointId)
     }
 
-    override fun onDisconnected(endpointId: String?) {
+    fun onDisconnected(endpointId: String?) {
         midiPresenter.onDisconnected(endpointId)
     }
 
-    override fun onConnectionInitiated(endpointId: String?, connectionInfo: ConnectionInfo?) {
-        midiPresenter.onConnectionInitiated(endpointId, connectionInfo)
+    fun onConnectionInitiated(endpointId: String??) {
+        midiPresenter.onConnectionInitiated(endpointId)
     }
 }

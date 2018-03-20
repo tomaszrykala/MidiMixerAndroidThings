@@ -5,11 +5,11 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 27
     defaultConfig {
         applicationId "com.tomaszrykala.midimixerandroidthings"
-        minSdkVersion 24
-        targetSdkVersion 26
+        minSdkVersion 26
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -24,16 +24,10 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation('com.android.support.test.espresso:espresso-core:3.0.1', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
+    compile 'com.android.support:support-annotations:27.1.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 
-    compileOnly 'com.google.android.things:androidthings:0.5.1-devpreview'
-    implementation 'com.google.android.things.contrib:driver-rainbowhat:0.5'
-    compile 'com.google.android.things.contrib:driver-button:0.4'
-    implementation 'com.google.android.gms:play-services-nearby:11.0.4' // TODO 11.0.4 vs 11.4.2
+    compileOnly 'com.google.android.things:androidthings:0.7-devpreview'
+    compile 'com.google.android.things.contrib:driver-button:0.6'
     compile project(path: ':common')
 }

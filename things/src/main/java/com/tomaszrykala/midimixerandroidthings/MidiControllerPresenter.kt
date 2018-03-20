@@ -1,10 +1,5 @@
 package com.tomaszrykala.midimixerandroidthings
 
-import com.google.android.gms.common.api.Status
-import com.google.android.gms.nearby.connection.ConnectionInfo
-import com.google.android.gms.nearby.connection.ConnectionResolution
-import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
-import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import com.tomaszrykala.common.MidiEventType
 import com.tomaszrykala.common.MidiEventWrapper
 import com.tomaszrykala.midimixerandroidthings.control.MidiButton
@@ -15,19 +10,19 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
                               private val service: String) : MidiControllerContract.Presenter {
 
     private var endpoint: String? = null
-    var lastMidiButtonPressed: MidiButton? = null
+    private var lastMidiButtonPressed: MidiButton? = null
 
-    override fun onResultCallback(result: Status) {
+    override fun onResultCallback() {
         val s = "onResultCallback:onResult: "
-        view.log(s + result.isSuccess)
-        view.log(s + result.status.statusCode.toString())
-        if (!result.isSuccess) {
-            if (endpoint != null) {
-                view.stopDiscovery(service)
-                endpoint = null
-            }
-            view.startDiscovery(service)
-        }
+//        view.log(s + result.isSuccess)
+//        view.log(s + result.status.statusCode.toString())
+//        if (!result.isSuccess) {
+//            if (endpoint != null) {
+//                view.stopDiscovery(service)
+//                endpoint = null
+//            }
+//            view.startDiscovery(service)
+//        }
     }
 
     override fun onStart() {
@@ -42,8 +37,8 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
         view.startDiscovery(service)
     }
 
-    override fun onEndpointFound(endpointId: String?, discoveredEndpointInfo: DiscoveredEndpointInfo?) {
-        view.log("onEndpointFound: " + endpointId)
+    override fun onEndpointFound(endpointId: String?) {
+        view.log("onEndpointFound: $endpointId")
         if (endpointId != null && endpointId != endpoint) {
             view.requestConnection(endpointId, service)
             endpoint = endpointId
@@ -51,35 +46,35 @@ class MidiControllerPresenter(private val view: MidiControllerContract.View,
     }
 
     override fun onEndpointLost(endpointId: String?) {
-        view.log("onEndpointLost: " + endpointId)
+        view.log("onEndpointLost: $endpointId")
         if (endpointId == endpoint) {
             view.startDiscovery(service)
             endpoint = null
         }
     }
 
-    override fun onConnectionInitiated(endpointId: String?, info: ConnectionInfo?) {
-        view.log("onConnectionInitiated: $endpointId; info: $info")
+    override fun onConnectionInitiated(endpointId: String?) {
+        view.log("onConnectionInitiated: $endpointId")
         if (endpointId != null) {
             endpoint = endpointId
             view.acceptConnection(endpointId)
         }
     }
 
-    override fun onConnectionResult(endpointId: String?, p1: ConnectionResolution?) {
-        if (endpoint != endpointId) {
-            when (p1?.status?.statusCode) {
-                ConnectionsStatusCodes.STATUS_OK -> {
-                    view.log("onConnectionResult OK")
-                    view.stopDiscovery(service)
-                }
-                else -> {
-                    view.log("onConnectionResult not OK")
-                    view.stopDiscovery(service)
-                    view.startDiscovery(service)
-                }
-            }
-        }
+    override fun onConnectionResult(endpointId: String?) {
+//        if (endpoint != endpointId) {
+//            when (p1?.status?.statusCode) {
+//                ConnectionsStatusCodes.STATUS_OK -> {
+//                    view.log("onConnectionResult OK")
+//                    view.stopDiscovery(service)
+//                }
+//                else -> {
+//                    view.log("onConnectionResult not OK")
+//                    view.stopDiscovery(service)
+//                    view.startDiscovery(service)
+//                }
+//            }
+//        }
     }
 
     override fun onDisconnected(endpointId: String?) {

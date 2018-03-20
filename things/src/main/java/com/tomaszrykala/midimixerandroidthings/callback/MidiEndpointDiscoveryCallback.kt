@@ -1,16 +1,14 @@
 package com.tomaszrykala.midimixerandroidthings.callback
 
-import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
-import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
 import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 
-class MidiEndpointDiscoveryCallback(private val presenter: MidiControllerContract.Presenter) : EndpointDiscoveryCallback() {
+class MidiEndpointDiscoveryCallback(private val presenter: MidiControllerContract.Presenter) {
 
-    override fun onEndpointFound(endpointId: String?, discoveredEndpointInfo: DiscoveredEndpointInfo?) {
-        presenter.onEndpointFound(endpointId, discoveredEndpointInfo)
+    fun onEndpointFound(endpointId: String?) {
+        presenter.onEndpointFound(endpointId)
     }
 
-    override fun onEndpointLost(endpointId: String?) {
+    fun onEndpointLost(endpointId: String?) {
         presenter.onEndpointLost(endpointId)
     }
 }

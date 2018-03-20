@@ -46,7 +46,7 @@
 package com.tomaszrykala.midimixerandroidthings.control.adc;
 
 import com.google.android.things.pio.Gpio;
-import com.google.android.things.pio.PeripheralManagerService;
+import com.google.android.things.pio.PeripheralManager;
 
 import java.io.IOException;
 import java.util.LinkedHashSet;
@@ -74,11 +74,11 @@ class MCP3008 {
     }
 
     void register() throws IOException {
-        PeripheralManagerService service = new PeripheralManagerService();
-        csPin = service.openGpio(csGpio);
-        clockPin = service.openGpio(clockGpio);
-        mosiPin = service.openGpio(mosiGpio);
-        misoPin = service.openGpio(misoGpio);
+        PeripheralManager peripheralManager = PeripheralManager.getInstance();
+        csPin = peripheralManager.openGpio(csGpio);
+        clockPin = peripheralManager.openGpio(clockGpio);
+        mosiPin = peripheralManager.openGpio(mosiGpio);
+        misoPin = peripheralManager.openGpio(misoGpio);
 
         csPin.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
         clockPin.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);

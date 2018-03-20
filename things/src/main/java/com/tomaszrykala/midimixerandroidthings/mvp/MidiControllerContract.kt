@@ -1,9 +1,5 @@
 package com.tomaszrykala.midimixerandroidthings.mvp
 
-import com.google.android.gms.common.api.Status
-import com.google.android.gms.nearby.connection.ConnectionInfo
-import com.google.android.gms.nearby.connection.ConnectionResolution
-import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import com.tomaszrykala.common.MidiEventWrapper
 import com.tomaszrykala.midimixerandroidthings.control.MidiButton
 import com.tomaszrykala.midimixerandroidthings.control.MidiPot
@@ -35,15 +31,15 @@ interface MidiControllerContract {
 
         fun onStop()
 
-        fun onResultCallback(result: Status)
+        fun onResultCallback()
 
-        fun onEndpointFound(endpointId: String?, discoveredEndpointInfo: DiscoveredEndpointInfo?)
+        fun onEndpointFound(endpointId: String?)
 
         fun onEndpointLost(endpointId: String?)
 
-        fun onConnectionInitiated(endpointId: String?, info: ConnectionInfo?)
+        fun onConnectionInitiated(endpointId: String?)
 
-        fun onConnectionResult(endpointId: String?, p1: ConnectionResolution?)
+        fun onConnectionResult(endpointId: String?)
 
         fun onDisconnected(endpointId: String?)
 
