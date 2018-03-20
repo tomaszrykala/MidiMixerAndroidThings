@@ -1,9 +1,5 @@
 package com.tomaszrykala.midimixerandroidthings.midi
 
-import android.app.Application
-import android.arch.lifecycle.AndroidViewModel
-import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.Observer
 import android.content.Context
 import android.media.midi.MidiDevice
 import android.media.midi.MidiDeviceInfo
@@ -15,16 +11,13 @@ class MidiController(
         context: Context,
         private val midiManager: MidiManager = context.getSystemService(Context.MIDI_SERVICE) as MidiManager,
         private val midiDeviceMonitor: MidiDeviceMonitor = MidiDeviceMonitor(context, midiManager)
-)
-    : AndroidViewModel(context.applicationContext as Application)
-{
+) {
 
     private var midiInputPort: MidiInputPort? = null
     private var midiDevice: MidiDevice? = null
     private val handler: Handler = Handler()
 
-    fun observeDevices(lifecycleOwner: LifecycleOwner, observer: Observer<List<MidiDeviceInfo>>) =
-            midiDeviceMonitor.observe(lifecycleOwner, observer)
+    fun observeDevices() = midiDeviceMonitor.onActive(this) // TODO added
 
     fun open(midiDeviceInfo: MidiDeviceInfo) =
             close().also {
@@ -39,6 +32,8 @@ class MidiController(
             }
 
     private fun close() {
+        midiDeviceMonitor.onInactive() // TODO added
+
         midiInputPort?.close()
         midiInputPort = null
         midiDevice?.close()
@@ -51,5 +46,6 @@ class MidiController(
 
     fun closeAll() {
         //NO-OP yet
+        close() // TODO added
     }
 }

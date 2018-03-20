@@ -27,103 +27,103 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
     }
 
     override fun onConnected(p0: Bundle?) {
-        startAdvertising()
+//        startAdvertising()
     }
 
-    fun startAdvertising() {
-        progressBar.visibility = View.VISIBLE
-        Nearby.Connections.startAdvertising(
-                googleApiClient,
-                serviceId,
-                serviceId,
-                midiConnectionCallback,
-                AdvertisingOptions(Strategy.P2P_STAR)
-        ).setResultCallback { result ->
-            log(result.status.statusCode.toString())
-            if (result.status.isSuccess) {
-                log("startAdvertising:onResult: SUCCESS")
-            } else {
-                log("startAdvertising:onResult: FAILURE ")
-                if (result.status.statusCode == ConnectionsStatusCodes.STATUS_ALREADY_ADVERTISING) {
-                    log("STATUS_ALREADY_ADVERTISING")
-                } else {
-                    log("STATE_READY")
-                }
-            }
-        }
-    }
+//    fun startAdvertising() {
+//        progressBar.visibility = View.VISIBLE
+//        Nearby.Connections.startAdvertising(
+//                googleApiClient,
+//                serviceId,
+//                serviceId,
+//                midiConnectionCallback,
+//                AdvertisingOptions(Strategy.P2P_STAR)
+//        ).setResultCallback { result ->
+//            log(result.status.statusCode.toString())
+//            if (result.status.isSuccess) {
+//                log("startAdvertising:onResult: SUCCESS")
+//            } else {
+//                log("startAdvertising:onResult: FAILURE ")
+//                if (result.status.statusCode == ConnectionsStatusCodes.STATUS_ALREADY_ADVERTISING) {
+//                    log("STATUS_ALREADY_ADVERTISING")
+//                } else {
+//                    log("STATE_READY")
+//                }
+//            }
+//        }
+//    }
 
     override fun onConnectionSuspended(p0: Int) {
-        log("onConnectionSuspended")
+//        log("onConnectionSuspended")
     }
 
     override fun onConnectionFailed(p0: ConnectionResult) {
-        log("onConnectionFailed")
+//        log("onConnectionFailed")
     }
 
-    private val lifecycleRegistry: LifecycleRegistry by lazyFast { LifecycleRegistry(this) }
-    override fun getLifecycle(): LifecycleRegistry = lifecycleRegistry
+//    private val lifecycleRegistry: LifecycleRegistry by lazyFast { LifecycleRegistry(this) }
+//    override fun getLifecycle(): LifecycleRegistry = lifecycleRegistry
 
-    class MidiConnectionCallback(private val googleApiClient: GoogleApiClient,
-                                 private val midiPayloadCallback: MidiPayloadCallback,
-                                 private val mainActivity: MainActivity) : ConnectionLifecycleCallback() {
+//    class MidiConnectionCallback(private val googleApiClient: GoogleApiClient,
+//                                 private val midiPayloadCallback: MidiPayloadCallback,
+//                                 private val mainActivity: MainActivity) : ConnectionLifecycleCallback() {
+//
+//        override fun onConnectionResult(endpointId: String?, connectionResolution: ConnectionResolution?) {
+//            mainActivity.log(connectionResolution.toString())
+//            when (connectionResolution?.status?.statusCode) {
+//                ConnectionsStatusCodes.SUCCESS -> {
+//                    mainActivity.log("onConnectionResult OK")
+//                    Nearby.Connections.stopAdvertising(googleApiClient)
+//                    mainActivity.progressBar.visibility = View.INVISIBLE
+//                }
+//                ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> mainActivity.log("onConnectionResult REJECTED")
+//                else -> mainActivity.log("onConnectionResult not OK")
+//            }
+//        }
+//
+//        override fun onDisconnected(endpointId: String?) {
+//            mainActivity.log("onDisconnected")
+////            mainActivity.startAdvertising()
+//        }
+//
+//        override fun onConnectionInitiated(endpointId: String?, p1: ConnectionInfo?) {
+//            mainActivity.log("onConnectionInitiated")
+//            Nearby.Connections.acceptConnection(googleApiClient, endpointId, midiPayloadCallback)
+//        }
+//    }
 
-        override fun onConnectionResult(endpointId: String?, connectionResolution: ConnectionResolution?) {
-            mainActivity.log(connectionResolution.toString())
-            when (connectionResolution?.status?.statusCode) {
-                ConnectionsStatusCodes.SUCCESS -> {
-                    mainActivity.log("onConnectionResult OK")
-                    Nearby.Connections.stopAdvertising(googleApiClient)
-                    mainActivity.progressBar.visibility = View.INVISIBLE
-                }
-                ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> mainActivity.log("onConnectionResult REJECTED")
-                else -> mainActivity.log("onConnectionResult not OK")
-            }
-        }
+//    class MidiPayloadCallback(private val midiController: MidiController) : PayloadCallback() {
+//
+//        override fun onPayloadReceived(endpointId: String?, payload: Payload?) {
+//            Log.d(TAG, "endpointId = $endpointId" + "payload = $payload")
+//
+//            val data = payload?.asBytes()
+//            if (data is ByteArray && data.size == 4) {
+//                val bytes = byteArrayOf((data[0] + data[1]).toByte(), data[2], data[3])
+//                midiController.send(bytes, System.nanoTime())
+//            }
+//        }
+//
+//        override fun onPayloadTransferUpdate(endpointId: String?, update: PayloadTransferUpdate?) {
+//            // no - op
+//        }
+//    }
 
-        override fun onDisconnected(endpointId: String?) {
-            mainActivity.log("onDisconnected")
-            mainActivity.startAdvertising()
-        }
-
-        override fun onConnectionInitiated(endpointId: String?, p1: ConnectionInfo?) {
-            mainActivity.log("onConnectionInitiated")
-            Nearby.Connections.acceptConnection(googleApiClient, endpointId, midiPayloadCallback)
-        }
-    }
-
-    class MidiPayloadCallback(private val midiController: MidiController) : PayloadCallback() {
-
-        override fun onPayloadReceived(endpointId: String?, payload: Payload?) {
-            Log.d(TAG, "endpointId = $endpointId" + "payload = $payload")
-
-            val data = payload?.asBytes()
-            if (data is ByteArray && data.size == 4) {
-                val bytes = byteArrayOf((data[0] + data[1]).toByte(), data[2], data[3])
-                midiController.send(bytes, System.nanoTime())
-            }
-        }
-
-        override fun onPayloadTransferUpdate(endpointId: String?, update: PayloadTransferUpdate?) {
-            // no - op
-        }
-    }
-
-    val midiController: MidiController by viewModelProvider {
-        MidiController(application)
-    }
-
-    private val deviceAdapter: DeviceAdapter by lazyFast {
-        DeviceAdapter(this, { it.inputPortCount > 0 })
-    }
-
-    private val googleApiClient: GoogleApiClient by lazyFast {
-        GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Nearby.CONNECTIONS_API)
-                .build()
-    }
+//    val midiController: MidiController by viewModelProvider {
+//        MidiController(application)
+//    }
+//
+//    private val deviceAdapter: DeviceAdapter by lazyFast {
+//        DeviceAdapter(this, { it.inputPortCount > 0 })
+//    }
+//
+//    private val googleApiClient: GoogleApiClient by lazyFast {
+//        GoogleApiClient.Builder(this)
+//                .addConnectionCallbacks(this)
+//                .addOnConnectionFailedListener(this)
+//                .addApi(Nearby.CONNECTIONS_API)
+//                .build()
+//    }
 
     private lateinit var textView: TextView
     private lateinit var scrollView: ScrollView

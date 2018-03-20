@@ -9,6 +9,7 @@ import android.widget.TextView
 import com.tomaszrykala.common.MidiEventWrapper
 import com.tomaszrykala.midimixerandroidthings.callback.MidiConnectionCallback
 import com.tomaszrykala.midimixerandroidthings.control.MidiControls
+import com.tomaszrykala.midimixerandroidthings.midi.MidiController
 import com.tomaszrykala.midimixerandroidthings.mvp.MidiControllerContract
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -25,6 +26,8 @@ class MainActivity : Activity(), MidiControllerContract.View {
     private var textView: TextView? = null
     private var scrollView: ScrollView? = null
 
+    private lateinit var midiController: MidiController
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -34,6 +37,9 @@ class MainActivity : Activity(), MidiControllerContract.View {
         midiPresenter = MidiControllerPresenter(this, getString(R.string.service_id))
         midiControls = MidiControls(midiPresenter)
         midiConnectionCallback = MidiConnectionCallback(midiPresenter)
+
+        midiController = MidiController(application) // TODO added
+        midiController.observeDevices() // TODO added
     }
 
     override fun onStart() {
@@ -46,6 +52,8 @@ class MainActivity : Activity(), MidiControllerContract.View {
         super.onStop()
         log("onStop")
         midiPresenter.onStop()
+
+        midiController.closeAll() // TODO added
     }
 
     override fun start() {
@@ -80,6 +88,12 @@ class MainActivity : Activity(), MidiControllerContract.View {
 
     override fun sendPayload(endpointId: String, wrapper: MidiEventWrapper) {
         val bytes = byteArrayOf(wrapper.type(), wrapper.channel(), wrapper.note(), wrapper.pressure())
+
+//        val data = payload?.asBytes()
+//        if (data is ByteArray && data.size == 4) {
+//            val bytes = byteArrayOf((data[0] + data[1]).toByte(), data[2], data[3])
+        midiController.send(bytes, System.nanoTime())
+//        }
     }
 
     override fun log(log: String) {
